@@ -13,7 +13,7 @@ import {
 
 export default function Sidebar() {
   return (
-    <div className="bg-gray-50">
+    <div className="">
       <div className="flex">
         <aside className="w-64 bg-white border-r border-gray-200 min-h-screen">
           <nav className="p-4 space-y-2">
