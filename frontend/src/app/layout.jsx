@@ -1,7 +1,8 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import ZelosDashboard from '@/components/Sidebar/Sidebar'
-import Footer from '@/components/Footer/Footer'
+import Sidebar from '@/components/Sidebar/Sidebar';
+import Footer from '@/components/Footer/Footer';
+import Header from '@/components/Header/Header';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,19 +21,27 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="h-full">
-      <body className="flex min-h-screen">
-        {/* Sidebar */}
-        <ZelosDashboard />
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full`}>
+      <body className="min-h-screen flex flex-col">
+        
+        {/* Header fixo no topo */}
+        <Header />
 
-        {/* Conteúdo principal */}
-        <div className="flex flex-col flex-1">
-          <main className="flex-1 p-6">
-            {children}
-          </main>
-          <Footer />
+        {/* Área principal com sidebar + conteúdo */}
+        <div className="flex flex-1">
+          {/* Sidebar à esquerda */}
+          <Sidebar />
+
+          {/* Conteúdo principal */}
+          <div className="flex flex-col flex-1">
+            <main className="flex-1 p-6">
+              {children}
+            </main>
+            <Footer />
+          </div>
         </div>
+        
       </body>
     </html>
-  )
+  );
 }
