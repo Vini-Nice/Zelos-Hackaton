@@ -1,6 +1,5 @@
 
 "use client";
-=======
 import Image from "next/image";
 import Link from "next/link";
 
@@ -33,7 +32,7 @@ const statusColors = {
   Cancelled: "bg-red-100 text-red-700",
   "In progress": "bg-blue-100 text-blue-700",
 };
->>>>>>> 5e03741a8c3c4986ee29bcd8fe8d06aadbcc77d9
+
 
 import { 
   FileText, 
@@ -197,7 +196,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-=======
     <div className=" p-6 bg-gray-50 space-y-6">
 
       {/* Linha com dois cards */}
@@ -284,7 +282,6 @@ export default function Dashboard() {
         </table>
       </div>
 
->>>>>>> 5e03741a8c3c4986ee29bcd8fe8d06aadbcc77d9
     </div>
   );
 }
