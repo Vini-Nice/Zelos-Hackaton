@@ -25,6 +25,7 @@ export default function ZelosDashboard() {
   };
 
   return (
+<<<<<<< HEAD
     <aside className="w-64 bg-white border-r border-gray-200 min-h-screen fixed left-0 top-0">
       <nav className="p-4 space-y-2">
         <Link href="/" passHref>
@@ -40,6 +41,20 @@ export default function ZelosDashboard() {
             Home
           </Button>
         </Link>
+=======
+    <div className="">
+      <div className="flex">
+        <aside className="w-64 bg-white border-r border-gray-200 min-h-screen">
+          <nav className="p-4 space-y-2">
+            <Link href="/" passHref legacyBehavior>
+              <Button asChild variant="ghost" className="w-full justify-start text-blue-600 bg-blue-50">
+                <a>
+                  <Home className="mr-3 h-4 w-4" />
+                  Home
+                </a>
+              </Button>
+            </Link>
+>>>>>>> 5e03741a8c3c4986ee29bcd8fe8d06aadbcc77d9
 
         <Link href="/abrir-chamado" passHref>
           <Button 
