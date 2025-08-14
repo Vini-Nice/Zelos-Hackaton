@@ -25,45 +25,28 @@ export default function ZelosDashboard() {
   };
 
   return (
-<<<<<<< HEAD
-    <aside className="w-64 bg-white border-r border-gray-200 min-h-screen fixed left-0 top-0">
+    <aside className="w-64 bg-white border-r border-gray-200 min-h-screen mt-14 fixed left-0 top-0">
       <nav className="p-4 space-y-2">
         <Link href="/" passHref>
-          <Button 
-            variant={isActive("/") ? "default" : "ghost"} 
-            className={`w-full justify-start ${
-              isActive("/") 
-                ? "text-white bg-blue-600" 
+          <Button
+            variant={isActive("/") ? "default" : "ghost"}
+            className={`w-full justify-start ${isActive("/")
+                ? "text-white bg-blue-600"
                 : "text-gray-700 hover:bg-gray-100"
-            }`}
+              }`}
           >
             <Home className="mr-3 h-4 w-4" />
             Home
           </Button>
         </Link>
-=======
-    <div className="">
-      <div className="flex">
-        <aside className="w-64 bg-white border-r border-gray-200 min-h-screen">
-          <nav className="p-4 space-y-2">
-            <Link href="/" passHref legacyBehavior>
-              <Button asChild variant="ghost" className="w-full justify-start text-blue-600 bg-blue-50">
-                <a>
-                  <Home className="mr-3 h-4 w-4" />
-                  Home
-                </a>
-              </Button>
-            </Link>
->>>>>>> 5e03741a8c3c4986ee29bcd8fe8d06aadbcc77d9
 
         <Link href="/abrir-chamado" passHref>
-          <Button 
-            variant={isActive("/abrir-chamado") ? "default" : "ghost"} 
-            className={`w-full justify-start ${
-              isActive("/abrir-chamado") 
-                ? "text-white bg-blue-600" 
+          <Button
+            variant={isActive("/abrir-chamado") ? "default" : "ghost"}
+            className={`w-full justify-start ${isActive("/abrir-chamado")
+                ? "text-white bg-blue-600"
                 : "text-gray-700 hover:bg-gray-100"
-            }`}
+              }`}
           >
             <Plus className="mr-3 h-4 w-4" />
             Abrir chamado
@@ -71,13 +54,12 @@ export default function ZelosDashboard() {
         </Link>
 
         <Link href="/meus-chamados" passHref>
-          <Button 
-            variant={isActive("/meus-chamados") ? "default" : "ghost"} 
-            className={`w-full justify-start ${
-              isActive("/meus-chamados") 
-                ? "text-white bg-blue-600" 
+          <Button
+            variant={isActive("/meus-chamados") ? "default" : "ghost"}
+            className={`w-full justify-start ${isActive("/meus-chamados")
+                ? "text-white bg-blue-600"
                 : "text-gray-700 hover:bg-gray-100"
-            }`}
+              }`}
           >
             <MessageSquare className="mr-3 h-4 w-4" />
             Meus Chamados
@@ -85,13 +67,12 @@ export default function ZelosDashboard() {
         </Link>
 
         <Link href="/perfil" passHref>
-          <Button 
-            variant={isActive("/perfil") ? "default" : "ghost"} 
-            className={`w-full justify-start ${
-              isActive("/perfil") 
-                ? "text-white bg-blue-600" 
+          <Button
+            variant={isActive("/perfil") ? "default" : "ghost"}
+            className={`w-full justify-start ${isActive("/perfil")
+                ? "text-white bg-blue-600"
                 : "text-gray-700 hover:bg-gray-100"
-            }`}
+              }`}
           >
             <User className="mr-3 h-4 w-4" />
             Perfil/Conta
@@ -105,13 +86,12 @@ export default function ZelosDashboard() {
 
         <div className="pt-4 border-t border-gray-200">
           <Link href="/manual" passHref>
-            <Button 
-              variant={isActive("/manual") ? "default" : "ghost"} 
-              className={`w-full justify-start ${
-                isActive("/manual") 
-                  ? "text-white bg-blue-600" 
+            <Button
+              variant={isActive("/manual") ? "default" : "ghost"}
+              className={`w-full justify-start ${isActive("/manual")
+                  ? "text-white bg-blue-600"
                   : "text-gray-700 hover:bg-gray-100"
-              }`}
+                }`}
             >
               <BookOpen className="mr-3 h-4 w-4" />
               Manual e FAQ inclusivos
@@ -119,13 +99,12 @@ export default function ZelosDashboard() {
           </Link>
 
           <Link href="/tutoriais" passHref>
-            <Button 
-              variant={isActive("/tutoriais") ? "default" : "ghost"} 
-              className={`w-full justify-start ${
-                isActive("/tutoriais") 
-                  ? "text-white bg-blue-600" 
+            <Button
+              variant={isActive("/tutoriais") ? "default" : "ghost"}
+              className={`w-full justify-start ${isActive("/tutoriais")
+                  ? "text-white bg-blue-600"
                   : "text-gray-700 hover:bg-gray-100"
-              }`}
+                }`}
             >
               <GraduationCap className="mr-3 h-4 w-4" />
               Recursos e tutoriais
@@ -133,13 +112,12 @@ export default function ZelosDashboard() {
           </Link>
 
           <Link href="/ajuda" passHref>
-            <Button 
-              variant={isActive("/ajuda") ? "default" : "ghost"} 
-              className={`w-full justify-start ${
-                isActive("/ajuda") 
-                  ? "text-white bg-blue-600" 
+            <Button
+              variant={isActive("/ajuda") ? "default" : "ghost"}
+              className={`w-full justify-start ${isActive("/ajuda")
+                  ? "text-white bg-blue-600"
                   : "text-gray-700 hover:bg-gray-100"
-              }`}
+                }`}
             >
               <HelpCircle className="mr-3 h-4 w-4" />
               Ajuda

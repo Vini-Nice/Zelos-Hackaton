@@ -1,7 +1,15 @@
-
 "use client";
 import Image from "next/image";
 import Link from "next/link";
+import {
+  FileText,
+  MessageSquare,
+  Clock,
+  CheckCircle,
+  TrendingUp,
+  Users,
+  Activity,
+} from "lucide-react";
 
 const chamados = [
   { name: "Neil Sims", email: "email@example.com", avatar: "/avatars/neil.png" },
@@ -46,7 +54,6 @@ import {
 
 export default function Dashboard() {
   return (
-
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -108,7 +115,7 @@ export default function Dashboard() {
 
         {/* Cards Principais */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* Card de Chamados Recentes */}
+          {/* Chamados Recentes */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900">Chamados Recentes</h2>
@@ -117,6 +124,7 @@ export default function Dashboard() {
               </button>
             </div>
             <div className="space-y-4">
+              {/* Urgente */}
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-red-500 rounded-full"></div>
@@ -127,7 +135,8 @@ export default function Dashboard() {
                 </div>
                 <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">Urgente</span>
               </div>
-              
+
+              {/* Média */}
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
@@ -138,7 +147,8 @@ export default function Dashboard() {
                 </div>
                 <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">Média</span>
               </div>
-              
+
+              {/* Baixa */}
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
@@ -152,7 +162,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Card de Atividade */}
+          {/* Atividade */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900">Atividade do Sistema</h2>
@@ -179,7 +189,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Card de Gráfico */}
+        {/* Gráfico */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900">Tendência de Chamados</h2>
@@ -198,90 +208,65 @@ export default function Dashboard() {
       </div>
     <div className=" p-6 bg-gray-50 space-y-6">
 
-      {/* Linha com dois cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        {/* Card 1 - Últimos chamados */}
-        <div className="bg-white rounded-xl shadow p-4 ">
-          <h2 className="font-semibold text-lg mb-3">Últimos chamados</h2>
-          <ul>
-            {chamados.map(({ name, email, avatar }) => (
-              <li key={name} className="flex items-center space-x-3 mb-3">
-                <div className="w-10 h-10 relative rounded-full overflow-hidden">
-                  <Image
-                    src={avatar}
-                    alt={name}
-                    fill
-                    sizes="40px"
-                    className="object-cover"
-                  />
-                </div>
-                <div>
-                  <p className="font-medium">{name}</p>
-                  <p className="text-sm text-gray-500">{email}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {/* Últimos Chamados & Ações rápidas */}
+        <div className="p-6 bg-gray-50 space-y-6 w-full">
+          
 
-        {/* Card 2 - Ações rápidas */}
-        <div className="bg-white rounded-xl shadow p-4 min-h-[280px]">
-          <h2 className="font-semibold text-lg  mb-3">Ações rápidas</h2>
-          <ul className=" list-inside  space-y-2 text-black cursor-pointer">
-            {acoes.map((acao) => (
-              <li className="border-b" key={acao}>
-                <Link
-                  href={`/${acao.toLowerCase().replace(/\s+/g, "-")}`}
-                  className=""
-                >
-                  {acao}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+            {/* Ações rápidas */}
+            <div className="bg-white rounded-xl shadow p-4 min-h-[280px]">
+              <h2 className="font-semibold text-lg mb-3">Ações rápidas</h2>
+              <ul className="list-inside space-y-2 text-black cursor-pointer">
+                {acoes.map((acao) => (
+                  <li className="border-b" key={acao}>
+                    <Link
+                      href={`/${acao.toLowerCase().replace(/\s+/g, "-")}`}
+                    >
+                      {acao}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          
 
-      {/* Card 3 - Resumo dos chamados */}
-      <div className="bg-white rounded-xl shadow p-6 min-h-[280px]">
-        <h2 className="font-semibold text-lg mb-4">Resumo dos seus chamados</h2>
-        <p className="text-gray-500 mb-6 text-sm">
-          This is a list of latest transactions.
-        </p>
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-gray-300">
-              <th className="py-2">Chamados</th>
-              <th className="py-2">Date & Time</th>
-              <th className="py-2">Amount</th>
-              <th className="py-2">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {resumoChamados.map(({ chamado, date, amount, status }, i) => (
-              <tr
-                key={i}
-                className={`border-b border-gray-200 ${
-                  i % 2 === 0 ? "bg-gray-50" : "bg-white"
-                }`}
-              >
-                <td className="py-2">{chamado}</td>
-                <td className="py-2">{date}</td>
-                <td className="py-2 font-mono">{amount}</td>
-                <td className="py-2">
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-semibold ${statusColors[status]}`}
+          {/* Resumo dos chamados */}
+          <div className="bg-white rounded-xl shadow p-6 min-h-[280px]">
+            <h2 className="font-semibold text-lg mb-4">Resumo dos seus chamados</h2>
+            <p className="text-gray-500 mb-6 text-sm">
+              This is a list of latest transactions.
+            </p>
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-gray-300">
+                  <th className="py-2">Chamados</th>
+                  <th className="py-2">Date & Time</th>
+                  <th className="py-2">Amount</th>
+                  <th className="py-2">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {resumoChamados.map(({ chamado, date, amount, status }, i) => (
+                  <tr
+                    key={i}
+                    className={`border-b border-gray-200 ${i % 2 === 0 ? "bg-gray-50" : "bg-white"}`}
                   >
-                    {status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    <td className="py-2">{chamado}</td>
+                    <td className="py-2">{date}</td>
+                    <td className="py-2 font-mono">{amount}</td>
+                    <td className="py-2">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-semibold ${statusColors[status]}`}
+                      >
+                        {status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-
     </div>
   );
 }
