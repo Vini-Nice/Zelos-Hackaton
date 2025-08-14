@@ -41,17 +41,6 @@ const statusColors = {
   "In progress": "bg-blue-100 text-blue-700",
 };
 
-
-import { 
-  FileText, 
-  MessageSquare, 
-  Clock, 
-  CheckCircle,
-  TrendingUp,
-  Users,
-  Activity
-} from "lucide-react";
-
 export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
