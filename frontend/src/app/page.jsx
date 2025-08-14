@@ -1,5 +1,9 @@
 "use client";
+<<<<<<< HEAD
 
+=======
+import Image from "next/image";
+>>>>>>> 22be4df3319f41c1bfc4a510672b1a24de95fb1e
 import Link from "next/link";
 import { FileText, Clock, CheckCircle, HelpCircle, AlertTriangle, User } from "lucide-react";
 
@@ -75,10 +79,59 @@ export default function DashboardUsuario() {
           </div>
         </div>
 
+<<<<<<< HEAD
         {/* Meus chamados */}
         <div className="bg-white rounded-xl shadow-sm border p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Meus Chamados Recentes</h2>
           <div className="overflow-x-auto">
+=======
+        {/* Gráfico */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-gray-900">Tendência de Chamados</h2>
+            <TrendingUp className="h-5 w-5 text-green-500" />
+          </div>
+          <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <TrendingUp className="h-8 w-8 text-blue-600" />
+              </div>
+              <p className="text-gray-500">Gráfico de tendência</p>
+              <p className="text-sm text-gray-400">Integração com biblioteca de gráficos</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    <div className=" p-6 bg-gray-50 space-y-6">
+
+        {/* Últimos Chamados & Ações rápidas */}
+        <div className="p-6 bg-gray-50 space-y-6 w-full">
+          
+
+            {/* Ações rápidas */}
+            <div className="bg-white rounded-xl shadow p-4 min-h-[280px]">
+              <h2 className="font-semibold text-lg mb-3">Ações rápidas</h2>
+              <ul className="list-inside space-y-2 text-black cursor-pointer">
+                {acoes.map((acao) => (
+                  <li className="border-b" key={acao}>
+                    <Link
+                      href={`/${acao.toLowerCase().replace(/\s+/g, "-")}`}
+                    >
+                      {acao}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          
+
+          {/* Resumo dos chamados */}
+          <div className="bg-white rounded-xl shadow p-6 min-h-[280px]">
+            <h2 className="font-semibold text-lg mb-4">Resumo dos seus chamados</h2>
+            <p className="text-gray-500 mb-6 text-sm">
+              This is a list of latest transactions.
+            </p>
+>>>>>>> 22be4df3319f41c1bfc4a510672b1a24de95fb1e
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-gray-300">
