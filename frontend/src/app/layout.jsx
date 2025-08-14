@@ -1,7 +1,7 @@
 import "./globals.css";
 import ZelosDashboard from "@/components/Sidebar/Sidebar";
 import Header from "@/components/Header/Header";
-
+import SuporteFlutuante from "@/components/SuporteFlutuante/SuporteFlutuante";
 
 export const metadata = {
   title: "Zelos - Sistema de Chamados",
@@ -17,6 +17,7 @@ export default function RootLayout({ children }) {
           <ZelosDashboard />
           <main className="flex-1 ml-64">
             {children}
+            <SuporteFlutuante/>
           </main>
         </div>
       </body>
