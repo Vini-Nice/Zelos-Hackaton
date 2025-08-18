@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 const pool = mysql.createPool({
     host: 'localhost',
     user: 'root',
-    password: '1234',
+    password: 'Ed110675@',
     database: 'zelo', 
     waitForConnections: true,
     connectionLimit: 10,

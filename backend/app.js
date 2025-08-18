@@ -3,6 +3,7 @@ import cors from 'cors';
 import session from 'express-session';
 import dotenv from 'dotenv';
 import authRotas from './routes/authRotas.js';
+import authLocalRotas from './routes/authLocalRotas.js';
 import passport from './config/ldap.js';
 // Novas importações
 import usuarioRoutes from './routes/usuarioRoutes.js';
@@ -47,6 +48,117 @@ try {
 
 // 5. Rotas
 app.use('/auth', authRotas);
+app.use('/auth-local', authLocalRotas); // Rotas de autenticação local para desenvolvimento
+
+// Rota de teste para verificar se está funcionando
+app.get('/teste-auth-local', (req, res) => {
+  res.json({ 
+    message: 'Rota de teste funcionando!',
+    timestamp: new Date().toISOString(),
+    rotas: ['/auth-local/login-local', '/auth-local/usuarios-teste', '/auth-local/check-auth-local']
+  });
+});
+
+// Rotas de autenticação local diretas (backup)
+app.get('/usuarios-teste', (req, res) => {
+  const usuariosTeste = [
+    {
+      username: 'admin',
+      displayName: 'Administrador',
+      email: 'admin@zelos.com',
+      funcao: 'admin'
+    },
+    {
+      username: 'usuario',
+      displayName: 'Usuário Teste',
+      email: 'usuario@zelos.com',
+      funcao: 'usuario'
+    },
+    {
+      username: 'tecnico',
+      displayName: 'Técnico Suporte',
+      email: 'tecnico@zelos.com',
+      funcao: 'tecnico'
+    }
+  ];
+  
+  res.json({
+    message: 'Usuários de teste disponíveis',
+    usuarios: usuariosTeste,
+    credenciais: {
+      senha: 'password',
+      observacao: 'Use "password" como senha para todos os usuários'
+    }
+  });
+});
+
+// Login local direto (backup)
+app.post('/login-local', (req, res) => {
+  const { username, password } = req.body;
+  
+  if (!username || !password) {
+    return res.status(400).json({ 
+      error: 'Usuário e senha são obrigatórios' 
+    });
+  }
+
+  // Verificar credenciais simples
+  if (password === 'password' && ['admin', 'usuario', 'tecnico'].includes(username)) {
+    const usuarios = {
+      admin: { displayName: 'Administrador', email: 'admin@zelos.com', funcao: 'admin' },
+      usuario: { displayName: 'Usuário Teste', email: 'usuario@zelos.com', funcao: 'usuario' },
+      tecnico: { displayName: 'Técnico Suporte', email: 'tecnico@zelos.com', funcao: 'tecnico' }
+    };
+
+    const usuario = usuarios[username];
+    
+    // Criar sessão
+    req.session.user = {
+      username: username,
+      displayName: usuario.displayName,
+      email: usuario.email,
+      funcao: usuario.funcao
+    };
+
+    res.json({
+      message: 'Login realizado com sucesso',
+      user: {
+        username: username,
+        displayName: usuario.displayName,
+        email: usuario.email,
+        funcao: usuario.funcao
+      }
+    });
+  } else {
+    res.status(401).json({ 
+      error: 'Credenciais inválidas' 
+    });
+  }
+});
+
+// Verificar autenticação local direta (backup)
+app.get('/check-auth-local', (req, res) => {
+  if (req.session.user) {
+    return res.json({
+      authenticated: true,
+      user: req.session.user
+    });
+  }
+  res.status(401).json({ authenticated: false });
+});
+
+// Logout local direto (backup)
+app.post('/logout-local', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ 
+        error: 'Erro ao fazer logout' 
+      });
+    }
+    res.json({ message: 'Logout realizado com sucesso' });
+  });
+});
+
 // Novas rotas
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/pools', poolRoutes);
@@ -71,6 +183,9 @@ process.on('uncaughtException', (err) => {
 // 7. Inicialização do servidor com verificação
 const server = app.listen(porta, () => {
   console.log(`Servidor rodando na porta ${porta}`);
+  console.log(`✅ Rotas de autenticação local disponíveis em /auth-local`);
+  console.log(`✅ Rotas de backup disponíveis em /usuarios-teste, /login-local, etc.`);
+  console.log(`✅ Rota de teste disponível em /teste-auth-local`);
 }).on('error', (err) => {
   console.error('Erro ao iniciar:', err);
 });
