@@ -4,6 +4,12 @@ import session from 'express-session';
 import dotenv from 'dotenv';
 import authRotas from './routes/authRotas.js';
 import passport from './config/ldap.js';
+// Novas importações
+import usuarioRoutes from './routes/usuarioRoutes.js';
+import poolRoutes from './routes/poolRoutes.js';
+import chamadoRoutes from './routes/chamadoRoutes.js';
+import apontamentoRoutes from './routes/apontamentoRoutes.js';
+import poolTecnicoRoutes from './routes/poolTecnicoRoutes.js';
 
 // 1. Carrega variáveis de ambiente PRIMEIRO
 dotenv.config();
@@ -41,6 +47,12 @@ try {
 
 // 5. Rotas
 app.use('/auth', authRotas);
+// Novas rotas
+app.use('/api/usuarios', usuarioRoutes);
+app.use('/api/pools', poolRoutes);
+app.use('/api/chamados', chamadoRoutes);
+app.use('/api/apontamentos', apontamentoRoutes);
+app.use('/api/pool_tecnico', poolTecnicoRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'online' });
