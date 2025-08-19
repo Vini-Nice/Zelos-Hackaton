@@ -5,6 +5,7 @@ const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
+    console.warn('Tentativa de acesso sem token:', req.method, req.originalUrl);
     return res.status(401).json({ mensagem: 'Não autorizado: Token não fornecido' });
   }
 
@@ -15,6 +16,7 @@ const authMiddleware = (req, res, next) => {
     req.usuarioId = decoded.id;
     next();
   } catch (error) {
+    console.warn('Token inválido para', req.method, req.originalUrl, '| Token:', token);
     return res.status(403).json({ mensagem: 'Não autorizado: Token inválido' });
   }
 };
