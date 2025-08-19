@@ -1,39 +1,17 @@
 import { apiService } from './api';
 
 export const authLocalService = {
-  async login(username, password) {
-    // Tentar primeiro as rotas originais, depois as de backup
-    try {
-      return await apiService.post('/auth-local/login-local', { username, password });
-    } catch (error) {
-      // Se falhar, usar rota de backup
-      return await apiService.post('/login-local', { username, password });
-    }
+  async login(email, senha) {
+    return await apiService.post('/api/usuarios/login', { email, senha });
   },
-  
   async logout() {
-    try {
-      return await apiService.post('/auth-local/logout-local');
-    } catch (error) {
-      return await apiService.post('/logout-local');
-    }
+    // Se houver rota de logout real, implemente aqui
+    // Por enquanto, apenas remove o token local
+    localStorage.removeItem('token');
   },
-  
   async checkAuth() {
-    try {
-      return await apiService.get('/auth-local/check-auth-local');
-    } catch (error) {
-      return await apiService.get('/check-auth-local');
-    }
-  },
-
-  // Listar usuários de teste disponíveis
-  async listarUsuariosTeste() {
-    try {
-      return await apiService.get('/auth-local/usuarios-teste');
-    } catch (error) {
-      // Se falhar, usar rota de backup
-      return await apiService.get('/usuarios-teste');
-    }
+    // Não há rota de sessão, então apenas verifica se há token
+    const token = localStorage.getItem('token');
+    return { authenticated: !!token };
   }
 };

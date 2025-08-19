@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useContext, useState, useEffect } from 'react';
-import { authService } from '../services/auth';
+import { authLocalService } from '../services/authLocal';
 
 const AuthContext = createContext();
 
@@ -17,14 +17,10 @@ export function AuthProvider({ children }) {
     try {
       setLoading(true);
       setError(null);
-      
-      if (authService.isAuthenticated()) {
-        const response = await authService.checkAuth();
-        if (response.authenticated) {
-          setUser(response.user);
-        } else {
-          setUser(null);
-        }
+      // Tentar autenticação diretamente
+      const response = await authLocalService.checkAuth();
+      if (response.authenticated) {
+        setUser(response.user);
       } else {
         setUser(null);
       }
@@ -37,13 +33,15 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const login = async (username, password) => {
+  const login = async (email, senha) => {
     try {
       setLoading(true);
       setError(null);
-      
-      const response = await authService.login(username, password);
-      setUser(response.user);
+      const response = await authLocalService.login(email, senha);
+      setUser(response.usuario || response.user);
+      if (response.token) {
+        localStorage.setItem('token', response.token);
+      }
       return response;
     } catch (error) {
       setError(error.message || 'Erro no login');
@@ -56,12 +54,13 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     try {
       setLoading(true);
-      await authService.logout();
+      await authLocalService.logout();
+      localStorage.removeItem('token');
       setUser(null);
       setError(null);
     } catch (error) {
       console.error('Erro no logout:', error);
-      // Mesmo com erro, limpa o estado local
+      localStorage.removeItem('token');
       setUser(null);
     } finally {
       setLoading(false);

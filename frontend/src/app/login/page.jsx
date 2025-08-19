@@ -6,10 +6,9 @@ import { useRouter } from "next/navigation";
 import { authLocalService } from "../../services/authLocal";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [authMode, setAuthMode] = useState('ldap'); // 'ldap' ou 'local'
   const [usuariosTeste, setUsuariosTeste] = useState([]);
   const [showUsuariosTeste, setShowUsuariosTeste] = useState(false);
   
@@ -25,17 +24,15 @@ export default function LoginPage() {
 
   // Carregar usuários de teste
   useEffect(() => {
-    if (authMode === 'local') {
-      carregarUsuariosTeste();
-    }
-  }, [authMode]);
+    carregarUsuariosTeste();
+  }, []);
 
   // Limpar erro quando o usuário digitar
   useEffect(() => {
-    if (username || password) {
+    if (email || senha) {
       clearError();
     }
-  }, [username, password, clearError]);
+  }, [email, senha, clearError]);
 
   const carregarUsuariosTeste = async () => {
     try {
@@ -49,22 +46,14 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!username.trim() || !password.trim()) {
+    if (!email.trim() || !senha.trim()) {
       return;
     }
 
     setIsSubmitting(true);
     
     try {
-      if (authMode === 'local') {
-        // Login local para desenvolvimento
-        const response = await authLocalService.login(username, password);
-        // Simular login no contexto
-        login(username, password);
-      } else {
-        // Login LDAP normal
-        await login(username, password);
-      }
+      await login(email, senha);
       // O redirecionamento será feito pelo useEffect acima
     } catch (error) {
       // O erro já está sendo tratado no contexto
@@ -75,8 +64,8 @@ export default function LoginPage() {
   };
 
   const preencherCredenciaisTeste = (username, password) => {
-    setUsername(username);
-    setPassword(password);
+    setEmail(username);
+    setSenha(password);
   };
 
   return (
@@ -87,59 +76,12 @@ export default function LoginPage() {
           <p className="text-gray-600">Sistema de Chamados</p>
         </div>
 
-        {/* Seletor de modo de autenticação */}
-        <div className="mb-6">
-          <div className="flex rounded-lg border border-gray-200 p-1 bg-gray-50">
-            <button
-              onClick={() => setAuthMode('ldap')}
-              className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
-                authMode === 'ldap'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              LDAP
-            </button>
-            <button
-              onClick={() => setAuthMode('local')}
-              className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
-                authMode === 'local'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Desenvolvimento
-            </button>
-          </div>
-        </div>
-
         {/* Informações do modo selecionado */}
-        {authMode === 'local' && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-blue-800">Modo Desenvolvimento</h3>
-                <p className="text-sm text-blue-700 mt-1">
-                  Use credenciais de teste para desenvolvimento. Senha padrão: <strong>password</strong>
-                </p>
-                <button
-                  onClick={() => setShowUsuariosTeste(!showUsuariosTeste)}
-                  className="text-blue-600 hover:text-blue-500 text-sm font-medium mt-2"
-                >
-                  {showUsuariosTeste ? 'Ocultar' : 'Ver'} usuários de teste
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
+        {/* Remover todas as referências a authMode, deixar apenas o fluxo local */}
         {/* Lista de usuários de teste */}
-        {showUsuariosTeste && authMode === 'local' && (
+        {/* Remover qualquer UI de seleção de modo de autenticação */}
+        {/* Lista de usuários de teste */}
+        {showUsuariosTeste && (
           <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
             <h4 className="text-sm font-medium text-gray-700 mb-3">Usuários de Teste:</h4>
             <div className="space-y-2">
@@ -178,15 +120,15 @@ export default function LoginPage() {
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-              {authMode === 'ldap' ? 'Usuário LDAP' : 'Usuário'}
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              Email
             </label>
             <input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder={authMode === 'ldap' ? "Digite seu usuário LDAP" : "Digite o usuário de teste"}
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Digite o email de teste"
               required
               disabled={isSubmitting}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -194,15 +136,15 @@ export default function LoginPage() {
           </div>
           
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="senha" className="block text-sm font-medium text-gray-700 mb-2">
               Senha
             </label>
             <input
-              id="password"
+              id="senha"
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={authMode === 'ldap' ? "Digite sua senha" : "Use 'password' para usuários de teste"}
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              placeholder="Use 'password' para usuários de teste"
               required
               disabled={isSubmitting}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -211,7 +153,7 @@ export default function LoginPage() {
           
           <button
             type="submit"
-            disabled={isSubmitting || !username.trim() || !password.trim()}
+            disabled={isSubmitting || !email.trim() || !senha.trim()}
             className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isSubmitting ? (
@@ -227,10 +169,7 @@ export default function LoginPage() {
         
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
-            {authMode === 'ldap' 
-              ? 'Sistema de autenticação LDAP' 
-              : 'Modo desenvolvimento - Use credenciais de teste'
-            }
+            Modo desenvolvimento - Use credenciais de teste
           </p>
         </div>
       </div>
