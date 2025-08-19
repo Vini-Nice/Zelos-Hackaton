@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
 import dotenv from 'dotenv';
+import authRotas from './routes/authRotas.js';
+import passport from './config/ldap.js';
 // Novas importações
 import usuarioRoutes from './routes/usuarioRoutes.js';
 import poolRoutes from './routes/poolRoutes.js';
@@ -19,7 +21,7 @@ const porta = process.env.PORT || 8080;
 // 3. Middlewares essenciais com tratamento de erros
 try {
   app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true
   }));
   app.use(express.json());
@@ -28,10 +30,15 @@ try {
     secret: 'sJYMmuCB2Z187XneUuaOVYTVUlxEOb2K94tFZy370HjOY7T7aiCKvwhNQpQBYL9e',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false, sameSite: 'lax' }
+    cookie: { secure: false }
   }));
 
   // 4. Inicialização segura do Passport
+  if (!passport) {
+    throw new Error('Passport não foi importado corretamente');
+  }
+  app.use(passport.initialize());
+  app.use(passport.session());
 
 } catch (err) {
   console.error('Erro na configuração inicial:', err);
@@ -39,8 +46,7 @@ try {
 }
 
 // 5. Rotas
-// Remover: app.use('/auth-local', authLocalRotas); // Rotas de autenticação local para desenvolvimento
-
+app.use('/auth', authRotas);
 // Novas rotas
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/pools', poolRoutes);
@@ -65,9 +71,6 @@ process.on('uncaughtException', (err) => {
 // 7. Inicialização do servidor com verificação
 const server = app.listen(porta, () => {
   console.log(`Servidor rodando na porta ${porta}`);
-  console.log(`✅ Rotas de autenticação local disponíveis em /auth-local`);
-  console.log(`✅ Rotas de backup disponíveis em /usuarios-teste, /login-local, etc.`);
-  console.log(`✅ Rota de teste disponível em /teste-auth-local`);
 }).on('error', (err) => {
   console.error('Erro ao iniciar:', err);
 });
