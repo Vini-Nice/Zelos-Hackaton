@@ -4,7 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "create-users": "node scripts/createTestUsers.js",
+    "create-pools": "node scripts/createTestPools.js",
+    "setup": "npm run create-pools && npm run create-users"
   },
   "keywords": [],
   "author": "",
@@ -23,5 +28,8 @@
     "mysql2": "^3.14.1",
     "passport": "^0.7.0",
     "passport-ldapauth": "^3.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
   }
 }

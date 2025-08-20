@@ -1,22 +1,44 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/components/AuthProvider/AuthProvider";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const { login } = useAuth();
+  const router = useRouter();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login:", { email, senha });
-    // Aqui você pode integrar autenticação real
+    setLoading(true);
+    setError("");
+
+    try {
+      await login(email, senha);
+      router.push("/");
+    } catch (error) {
+      setError(error.message || "Erro ao fazer login");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6 text-center">Login</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-6 text-center">Login Zelos</h1>
+        
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-gray-700 mb-1">Email</label>
@@ -26,7 +48,8 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="seuemail@exemplo.com"
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              disabled={loading}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:bg-gray-100"
             />
           </div>
           <div>
@@ -37,22 +60,27 @@ export default function LoginPage() {
               onChange={(e) => setSenha(e.target.value)}
               placeholder="********"
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              disabled={loading}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:bg-gray-100"
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-400 disabled:cursor-not-allowed"
           >
-            Entrar
+            {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
-        <p className="text-sm text-gray-500 mt-4 text-center">
-          Não tem conta?{" "}
-          <Link href="/cadastro" className="text-blue-600 hover:underline">
-            Cadastre-se
-          </Link>
-        </p>
+        
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+          <h3 className="font-semibold text-blue-900 mb-2">Usuários de Teste:</h3>
+          <div className="text-sm text-blue-800 space-y-1">
+            <p><strong>Admin:</strong> admin@zelos.com / senha123</p>
+            <p><strong>Técnico:</strong> tecnico@zelos.com / senha123</p>
+            <p><strong>Usuário:</strong> usuario@zelos.com / senha123</p>
+          </div>
+        </div>
       </div>
     </div>
   );
