@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useAuth } from "@/components/AuthProvider/AuthProvider";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -19,8 +18,17 @@ export default function LoginPage() {
     setError("");
 
     try {
-      await login(email, senha);
-      router.push("/");
+      const usuarioLogado = await login(email, senha);
+
+      // Redirecionamento por função
+      if (usuarioLogado.funcao === "admin") {
+        router.push("/home-adm");
+      } else if (usuarioLogado.funcao === "tecnico") {
+        router.push("/home-manutencao");
+      } else {
+        router.push("/"); // usuário comum
+      }
+
     } catch (error) {
       setError(error.message || "Erro ao fazer login");
     } finally {
@@ -72,15 +80,6 @@ export default function LoginPage() {
             {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
-        
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-          <h3 className="font-semibold text-blue-900 mb-2">Usuários de Teste:</h3>
-          <div className="text-sm text-blue-800 space-y-1">
-            <p><strong>Admin:</strong> admin@zelos.com / senha123</p>
-            <p><strong>Técnico:</strong> tecnico@zelos.com / senha123</p>
-            <p><strong>Usuário:</strong> usuario@zelos.com / senha123</p>
-          </div>
-        </div>
       </div>
     </div>
   );

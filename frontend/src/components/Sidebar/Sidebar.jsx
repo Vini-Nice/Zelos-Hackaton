@@ -1,130 +1,128 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import {
-  Home,
-  Plus,
-  MessageSquare,
-  User,
-  LogOut,
-  BookOpen,
-  GraduationCap,
+import { Button } from "@/components/ui/button";
+import { 
+  Home, 
+  Plus, 
+  MessageSquare, 
+  User, 
+  LogOut, 
+  BookOpen, 
+  GraduationCap, 
   HelpCircle,
-} from "lucide-react"
+  Users,
+  Settings,
+  FileText,
+  ChevronLeft,
+  ChevronRight,
+  UserPlus,
+  Wrench,
+  Bell
+} from "lucide-react";
+import { useAuth } from "@/components/AuthProvider/AuthProvider";
 
-export default function ZelosDashboard() {
+export default function ZelosDashboard({ onToggle }) {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const isActive = (path) => {
-    return pathname === path;
+  const isActive = (path) => pathname === path;
+
+  // Redirecionamento de logout
+  const handleLogout = () => {
+    logout();
+    window.location.href = "/login";
   };
 
+  // Rotas específicas para cada tipo de usuário
+  const getRoutesByUserType = () => {
+    if (user?.funcao === "admin") {
+      return [
+        { href: "/home-adm", icon: Home, label: "Dashboard Admin" },
+        { href: "/cadastro-usuario", icon: UserPlus, label: "Cadastrar Usuário" },
+        { href: "/cadastro-tecnico", icon: UserPlus, label: "Cadastrar Técnico" },
+        { href: "/integrantes", icon: Users, label: "Gerenciar Usuários" },
+        { href: "/chamados-usuarios", icon: FileText, label: "Todos os Chamados" },
+      ];
+    } else if (user?.funcao === "tecnico") {
+      return [
+        { href: "/home-manutencao", icon: Wrench, label: "Dashboard Técnico" },
+        { href: "/vizualizar-chamados", icon: FileText, label: "Visualizar Chamados" },
+      ];
+    } else if (user?.funcao === "usuario") {
+      return [
+        { href: "/", icon: Home, label: "Página Principal" },
+        { href: "/meus-chamados", icon: FileText, label: "Meus Chamados" },
+      ];
+    }
+    return [];
+  };
+
+  // Rotas comuns para todos os usuários
+  const commonRoutes = [
+    { href: "/perfil", icon: User, label: "Perfil" },
+    { href: "/ajuda", icon: HelpCircle, label: "Ajuda" },
+    { href: "/suporte", icon: MessageSquare, label: "Suporte" },
+    { href: "/tutoriais", icon: GraduationCap, label: "Tutoriais" },
+  ];
+
+  const allRoutes = [...getRoutesByUserType(), ...commonRoutes];
+
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 min-h-screen mt-14 fixed left-0 top-0">
-      <nav className="p-4 space-y-2">
-        <Link href="/" passHref>
-          <Button
-            variant={isActive("/") ? "default" : "ghost"}
-            className={`w-full justify-start ${isActive("/")
-                ? "text-white bg-blue-600"
-                : "text-gray-700 hover:bg-gray-100"
-              }`}
-          >
-            <Home className="mr-3 h-4 w-4" />
-            Home
-          </Button>
-        </Link>
-
-        <Link href="/abrir-chamado" passHref>
-          <Button
-            variant={isActive("/abrir-chamado") ? "default" : "ghost"}
-            className={`w-full justify-start ${isActive("/abrir-chamado")
-                ? "text-white bg-blue-600"
-                : "text-gray-700 hover:bg-gray-100"
-              }`}
-          >
-            <Plus className="mr-3 h-4 w-4" />
-            Abrir chamado
-          </Button>
-        </Link>
-
-        <Link href="/meus-chamados" passHref>
-          <Button
-            variant={isActive("/meus-chamados") ? "default" : "ghost"}
-            className={`w-full justify-start ${isActive("/meus-chamados")
-                ? "text-white bg-blue-600"
-                : "text-gray-700 hover:bg-gray-100"
-              }`}
-          >
-            <MessageSquare className="mr-3 h-4 w-4" />
-            Meus Chamados
-          </Button>
-        </Link>
-
-        <Link href="/perfil" passHref>
-          <Button
-            variant={isActive("/perfil") ? "default" : "ghost"}
-            className={`w-full justify-start ${isActive("/perfil")
-                ? "text-white bg-blue-600"
-                : "text-gray-700 hover:bg-gray-100"
-              }`}
-          >
-            <User className="mr-3 h-4 w-4" />
-            Perfil/Conta
-          </Button>
-        </Link>
-
-        <Button variant="ghost" className="w-full justify-start text-gray-700 hover:bg-gray-100">
-          <LogOut className="mr-3 h-4 w-4" />
-          Sair
+    <aside className={`bg-white border-r border-gray-200 min-h-screen mt-14 fixed left-0 top-0 transition-all duration-300 ${
+      isCollapsed ? 'w-16' : 'w-64'
+    }`}>
+      {/* Botão para colapsar/expandir */}
+      <div className="flex justify-end p-2 border-b border-gray-200">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            const newState = !isCollapsed;
+            setIsCollapsed(newState);
+            onToggle?.(newState);
+          }}
+          className="h-8 w-8 p-0"
+        >
+          {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </Button>
+      </div>
 
-        <div className="pt-4 border-t border-gray-200">
-          <Link href="/manual" passHref>
+      <nav className="p-4 space-y-2">
+        {/* Links específicos por função */}
+        {allRoutes.map(({ href, icon: Icon, label }) => (
+          <Link href={href} key={href} passHref>
             <Button
-              variant={isActive("/manual") ? "default" : "ghost"}
-              className={`w-full justify-start ${isActive("/manual")
-                  ? "text-white bg-blue-600"
+              variant={isActive(href) ? "default" : "ghost"}
+              className={`w-full justify-start ${
+                isActive(href) 
+                  ? "text-white bg-blue-600" 
                   : "text-gray-700 hover:bg-gray-100"
-                }`}
+              } ${isCollapsed ? 'px-2' : 'px-4'}`}
+              title={isCollapsed ? label : undefined}
             >
-              <BookOpen className="mr-3 h-4 w-4" />
-              Manual e FAQ inclusivos
+              <Icon className={`h-4 w-4 ${isCollapsed ? 'mr-0' : 'mr-3'}`} />
+              {!isCollapsed && label}
             </Button>
           </Link>
+        ))}
 
-          <Link href="/tutoriais" passHref>
-            <Button
-              variant={isActive("/tutoriais") ? "default" : "ghost"}
-              className={`w-full justify-start ${isActive("/tutoriais")
-                  ? "text-white bg-blue-600"
-                  : "text-gray-700 hover:bg-gray-100"
-                }`}
-            >
-              <GraduationCap className="mr-3 h-4 w-4" />
-              Recursos e tutoriais
-            </Button>
-          </Link>
-
-          <Link href="/ajuda" passHref>
-            <Button
-              variant={isActive("/ajuda") ? "default" : "ghost"}
-              className={`w-full justify-start ${isActive("/ajuda")
-                  ? "text-white bg-blue-600"
-                  : "text-gray-700 hover:bg-gray-100"
-                }`}
-            >
-              <HelpCircle className="mr-3 h-4 w-4" />
-              Ajuda
-            </Button>
-          </Link>
-        </div>
+        {/* Botão de logout */}
+        <Button 
+          onClick={handleLogout} 
+          variant="ghost" 
+          className={`w-full justify-start text-gray-700 hover:bg-gray-100 ${
+            isCollapsed ? 'px-2' : 'px-4'
+          }`}
+          title={isCollapsed ? "Sair" : undefined}
+        >
+          <LogOut className={`h-4 w-4 ${isCollapsed ? 'mr-0' : 'mr-3'}`} />
+          {!isCollapsed && "Sair"}
+        </Button>
       </nav>
     </aside>
-  )
+  );
 }

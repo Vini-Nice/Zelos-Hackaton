@@ -9,8 +9,8 @@ import DashboardLayout from "@/components/DashboardLayout/DashboardLayout";
 
 const acoes = [
   { label: "Abrir Chamado", link: "/abrir-chamado", icon: <FileText className="h-10 w-10 text-blue-600" /> },
-  { label: "Acompanhar Chamados", link: "/meus-chamados", icon: <Clock className="h-10 w-10 text-purple-600" /> },
-  { label: "Manual / FAQ", link: "/manual", icon: <HelpCircle className="h-10 w-10 text-green-600" /> },
+  { label: "Meus Chamados", link: "/meus-chamados", icon: <Clock className="h-10 w-10 text-purple-600" /> },
+  { label: "Ajuda", link: "/ajuda", icon: <HelpCircle className="h-10 w-10 text-green-600" /> },
 ];
 
 const statusColors = {
