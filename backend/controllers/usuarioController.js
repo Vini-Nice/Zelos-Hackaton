@@ -71,27 +71,29 @@ const usuarioController = {
       if (!email || !senha) {
         return res.status(400).json({ erro: 'Email e senha são obrigatórios' });
       }
-  
+
       const usuario = await obterUsuarioPorEmail(email);
       if (!usuario) {
         return res.status(404).json({ erro: 'Usuário não encontrado' });
       }
-  
-      // Comparação simples de senha (apenas para testes)
-      if (senha !== usuario.senha) {
+
+      // Comparação de senha usando hash
+      const senhaCorreta = await compararSenha(senha, usuario.senha);
+      if (!senhaCorreta) {
         return res.status(401).json({ erro: 'Senha incorreta' });
       }
-  
+
+
       res.status(200).json({
         mensagem: 'Login bem-sucedido',
         usuario: { id: usuario.id, nome: usuario.nome, email: usuario.email, funcao: usuario.funcao }
       });
-  
+
     } catch (error) {
       res.status(500).json({ erro: 'Erro ao fazer login' });
     }
   }
-  
+
 };
 
 export default usuarioController;
