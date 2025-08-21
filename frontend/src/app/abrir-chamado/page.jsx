@@ -24,7 +24,7 @@ export default function AbrirChamadoPage() {
     const fetchPools = async () => {
       try {
         const poolsData = await apiRequest("/api/pools");
-        setPools(poolsData);
+        setPools(Array.isArray(poolsData) ? poolsData : poolsData?.data || []);
       } catch (error) {
         console.error("Erro ao carregar tipos de chamado:", error);
       }
@@ -71,6 +71,16 @@ export default function AbrirChamadoPage() {
       ...prev,
       [name]: value
     }));
+  };
+
+  const getPoolDisplayName = (titulo) => {
+    const displayNames = {
+      'externo': 'Externo',
+      'manutencao': 'Manutenção',
+      'apoio_tecnico': 'Apoio Técnico',
+      'limpeza': 'Limpeza'
+    };
+    return displayNames[titulo] || titulo;
   };
 
   return (
@@ -129,7 +139,7 @@ export default function AbrirChamadoPage() {
                   <option value="">Selecione o tipo</option>
                   {pools.map((pool) => (
                     <option key={pool.id} value={pool.id}>
-                      {pool.titulo.charAt(0).toUpperCase() + pool.titulo.slice(1).replace('_', ' ')}
+                      {getPoolDisplayName(pool.titulo)}
                     </option>
                   ))}
                 </select>

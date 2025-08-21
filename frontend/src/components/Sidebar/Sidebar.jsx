@@ -52,7 +52,7 @@ export default function ZelosDashboard({ onToggle }) {
         { href: "/home-manutencao", icon: Wrench, label: "Dashboard Técnico" },
         { href: "/vizualizar-chamados", icon: FileText, label: "Visualizar Chamados" },
       ];
-    } else if (user?.funcao === "usuario") {
+    } else if (user?.funcao === "aluno") {
       return [
         { href: "/", icon: Home, label: "Página Principal" },
         { href: "/meus-chamados", icon: FileText, label: "Meus Chamados" },

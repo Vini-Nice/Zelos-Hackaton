@@ -3,7 +3,19 @@ import { listarChamados, obterChamadoPorId, criarChamado, atualizarChamado, excl
 const chamadoController = {
   async listarChamados(req, res) {
     try {
-      const chamados = await listarChamados();
+      const { tecnico_id, usuario_id, status } = req.query;
+      const filters = [];
+      
+      // Se for um técnico, mostrar todos os chamados pendentes e em andamento
+      if (tecnico_id) {
+        filters.push(`(status = 'pendente' OR status = 'em andamento' OR tecnico_id = ${Number(tecnico_id)})`);
+      }
+      
+      if (usuario_id) filters.push(`usuario_id = ${Number(usuario_id)}`);
+      if (status) filters.push(`status = '${status}'`);
+      
+      const where = filters.length ? filters.join(' AND ') : null;
+      const chamados = await listarChamados(where);
       res.status(200).json(chamados);
     } catch (error) {
       res.status(500).json({ erro: 'Erro ao listar chamados' });

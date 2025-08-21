@@ -2,6 +2,7 @@
 
 import { Book, Video, FileText } from "lucide-react";
 import UserAvatar from "@/components/UserAvatar/UserAvatar";
+import DashboardLayout from "@/components/DashboardLayout/DashboardLayout";
 
 const recursos = [
   {
@@ -29,12 +30,13 @@ const recursos = [
 
 export default function Recursos() {
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-5xl mx-auto">
+    <DashboardLayout>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+        <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900">Recursos e Tutoriais</h1>
-          <UserAvatar name="Felipe" avatar="" size={40} />
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Recursos e Tutoriais</h1>
+          <UserAvatar name="Usuário" avatar="" size={40} />
         </div>
 
         {/* Cards de recursos */}
@@ -43,36 +45,37 @@ export default function Recursos() {
             <a
               key={id}
               href={link}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition cursor-pointer block"
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition cursor-pointer block"
             >
               <div className="flex items-center mb-4">
                 <div className="mr-4">{icone}</div>
-                <h2 className="text-lg font-semibold text-gray-900">{titulo}</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{titulo}</h2>
               </div>
-              <p className="text-gray-600 text-sm">{descricao}</p>
+              <p className="text-gray-600 dark:text-gray-300 text-sm">{descricao}</p>
             </a>
           ))}
         </div>
 
         {/* Dicas rápidas / FAQ */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Dicas Rápidas</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Dicas Rápidas</h2>
           <ul className="space-y-3">
-            <li className="p-3 border-b border-gray-200">
-              <p className="font-medium text-gray-900">Como acessar tutoriais offline?</p>
-              <p className="text-sm text-gray-600">Baixe os PDFs disponíveis na seção de recursos.</p>
+            <li className="p-3 border-b border-gray-200 dark:border-gray-700">
+              <p className="font-medium text-gray-900 dark:text-gray-100">Como acessar tutoriais offline?</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Baixe os PDFs disponíveis na seção de recursos.</p>
             </li>
-            <li className="p-3 border-b border-gray-200">
-              <p className="font-medium text-gray-900">Como navegar pelo manual?</p>
-              <p className="text-sm text-gray-600">Use o índice lateral para acessar tópicos específicos rapidamente.</p>
+            <li className="p-3 border-b border-gray-200 dark:border-gray-700">
+              <p className="font-medium text-gray-900 dark:text-gray-100">Como navegar pelo manual?</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Use o índice lateral para acessar tópicos específicos rapidamente.</p>
             </li>
-            <li className="p-3 border-b border-gray-200">
-              <p className="font-medium text-gray-900">Dicas para resolver problemas comuns</p>
-              <p className="text-sm text-gray-600">Verifique primeiro a seção de FAQ antes de abrir um chamado.</p>
+            <li className="p-3 border-b border-gray-200 dark:border-gray-700">
+              <p className="font-medium text-gray-900 dark:text-gray-100">Dicas para resolver problemas comuns</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Verifique primeiro a seção de FAQ antes de abrir um chamado.</p>
             </li>
           </ul>
         </div>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

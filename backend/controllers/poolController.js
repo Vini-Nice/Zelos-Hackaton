@@ -28,6 +28,13 @@ const poolController = {
       if (!titulo || !created_by || !updated_by) {
         return res.status(400).json({ erro: 'Campos obrigatórios faltando: titulo, created_by, updated_by' });
       }
+      
+      // Validar se o título está nos valores permitidos do ENUM
+      const titulosValidos = ['externo', 'manutencao', 'apoio_tecnico', 'limpeza'];
+      if (!titulosValidos.includes(titulo)) {
+        return res.status(400).json({ erro: 'Título deve ser: externo, manutencao, apoio_tecnico ou limpeza' });
+      }
+      
       const poolData = { 
         titulo, 
         descricao: descricao || null, 
@@ -46,7 +53,14 @@ const poolController = {
     try {
       const { titulo, descricao, status, updated_by } = req.body;
       const poolData = {};
-      if (titulo) poolData.titulo = titulo;
+      
+      if (titulo) {
+        const titulosValidos = ['externo', 'manutencao', 'apoio_tecnico', 'limpeza'];
+        if (!titulosValidos.includes(titulo)) {
+          return res.status(400).json({ erro: 'Título deve ser: externo, manutencao, apoio_tecnico ou limpeza' });
+        }
+        poolData.titulo = titulo;
+      }
       if (descricao) poolData.descricao = descricao;
       if (status) poolData.status = status;
       if (updated_by) poolData.updated_by = updated_by;

@@ -28,6 +28,13 @@ const usuarioController = {
       if (!nome || !email || !senha || !funcao) {
         return res.status(400).json({ erro: 'Campos obrigatórios faltando: nome, email, senha, funcao' });
       }
+      
+      // Validar função
+      const funcoesValidas = ['admin', 'tecnico', 'aluno'];
+      if (!funcoesValidas.includes(funcao)) {
+        return res.status(400).json({ erro: 'Função deve ser: admin, tecnico ou aluno' });
+      }
+      
       const usuarioData = { nome, email, senha, funcao, status: status || 'ativo' };
       const id = await criarUsuario(usuarioData);
       res.status(201).json({ id, mensagem: 'Usuário criado com sucesso' });
@@ -40,11 +47,24 @@ const usuarioController = {
     try {
       const { nome, email, senha, funcao, status } = req.body;
       const usuarioData = {};
+      
       if (nome) usuarioData.nome = nome;
       if (email) usuarioData.email = email;
       if (senha) usuarioData.senha = senha;
-      if (funcao) usuarioData.funcao = funcao;
-      if (status) usuarioData.status = status;
+      if (funcao) {
+        const funcoesValidas = ['admin', 'tecnico', 'aluno'];
+        if (!funcoesValidas.includes(funcao)) {
+          return res.status(400).json({ erro: 'Função deve ser: admin, tecnico ou aluno' });
+        }
+        usuarioData.funcao = funcao;
+      }
+      if (status) {
+        const statusValidos = ['ativo', 'inativo'];
+        if (!statusValidos.includes(status)) {
+          return res.status(400).json({ erro: 'Status deve ser: ativo ou inativo' });
+        }
+        usuarioData.status = status;
+      }
 
       if (Object.keys(usuarioData).length === 0) {
         return res.status(400).json({ erro: 'Nenhum dado fornecido para atualização' });
@@ -77,23 +97,54 @@ const usuarioController = {
         return res.status(404).json({ erro: 'Usuário não encontrado' });
       }
 
+      // Verificar se o usuário está ativo
+      if (usuario.status === 'inativo') {
+        return res.status(401).json({ erro: 'Usuário inativo' });
+      }
+
       // Comparação de senha usando hash
       const senhaCorreta = await compararSenha(senha, usuario.senha);
       if (!senhaCorreta) {
         return res.status(401).json({ erro: 'Senha incorreta' });
       }
 
-
       res.status(200).json({
         mensagem: 'Login bem-sucedido',
-        usuario: { id: usuario.id, nome: usuario.nome, email: usuario.email, funcao: usuario.funcao }
+        usuario: { 
+          id: usuario.id, 
+          nome: usuario.nome, 
+          email: usuario.email, 
+          funcao: usuario.funcao,
+          status: usuario.status 
+        }
       });
 
     } catch (error) {
       res.status(500).json({ erro: 'Erro ao fazer login' });
     }
-  }
+  },
 
+  // Listar apenas técnicos
+  async listarTecnicos(req, res) {
+    try {
+      const usuarios = await listarUsuarios();
+      const tecnicos = usuarios.filter(u => u.funcao === 'tecnico' && u.status === 'ativo');
+      res.status(200).json(tecnicos);
+    } catch (error) {
+      res.status(500).json({ erro: 'Erro ao listar técnicos' });
+    }
+  },
+
+  // Listar apenas alunos
+  async listarAlunos(req, res) {
+    try {
+      const usuarios = await listarUsuarios();
+      const alunos = usuarios.filter(u => u.funcao === 'aluno' && u.status === 'ativo');
+      res.status(200).json(alunos);
+    } catch (error) {
+      res.status(500).json({ erro: 'Erro ao listar alunos' });
+    }
+  }
 };
 
 export default usuarioController;

@@ -43,11 +43,9 @@ export default function VizualizarChamados() {
 
   const fetchChamados = async () => {
     try {
-      // Buscar chamados atribuídos ao técnico ou todos os chamados pendentes
       const response = await apiRequest(`/api/chamados?tecnico_id=${user?.id}`);
-      if (response.success) {
-        setChamados(response.data || []);
-      }
+      const data = Array.isArray(response) ? response : response?.data;
+      setChamados(data || []);
     } catch (error) {
       console.error("Erro ao carregar chamados:", error);
     } finally {
@@ -87,20 +85,13 @@ export default function VizualizarChamados() {
         body: JSON.stringify({
           chamado_id: selectedChamado.id,
           tecnico_id: user?.id,
-          descricao: apontamento,
-          data: new Date().toISOString()
+          descricao: apontamento
         })
       });
 
-      if (response.success) {
-        setApontamento("");
-        fetchChamados();
-        // Atualizar o chamado selecionado com o novo apontamento
-        const updatedChamado = await apiRequest(`/api/chamados/${selectedChamado.id}`);
-        if (updatedChamado.success) {
-          setSelectedChamado(updatedChamado.data);
-        }
-      }
+      setApontamento("");
+      fetchChamados();
+      // Atualizar o chamado selecionado (se necessário buscar apontamentos, ajustar backend depois)
     } catch (error) {
       console.error("Erro ao adicionar apontamento:", error);
     }
@@ -110,7 +101,7 @@ export default function VizualizarChamados() {
     switch (status) {
       case "pendente": return "bg-yellow-100 text-yellow-800";
       case "em andamento": return "bg-blue-100 text-blue-800";
-      case "concluído": return "bg-green-100 text-green-800";
+      case "concluido": return "bg-green-100 text-green-800";
       case "cancelado": return "bg-red-100 text-red-800";
       default: return "bg-gray-100 text-gray-800";
     }
@@ -120,18 +111,9 @@ export default function VizualizarChamados() {
     switch (status) {
       case "pendente": return <Clock className="h-4 w-4" />;
       case "em andamento": return <AlertTriangle className="h-4 w-4" />;
-      case "concluído": return <CheckCircle className="h-4 w-4" />;
+      case "concluido": return <CheckCircle className="h-4 w-4" />;
       case "cancelado": return <XCircle className="h-4 w-4" />;
       default: return <Clock className="h-4 w-4" />;
-    }
-  };
-
-  const getPrioridadeColor = (prioridade) => {
-    switch (prioridade) {
-      case "alta": return "bg-red-100 text-red-800";
-      case "média": return "bg-yellow-100 text-yellow-800";
-      case "baixa": return "bg-green-100 text-green-800";
-      default: return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -139,7 +121,7 @@ export default function VizualizarChamados() {
     switch (status) {
       case "pendente": return "Pendente";
       case "em andamento": return "Em Andamento";
-      case "concluído": return "Concluído";
+      case "concluido": return "Concluído";
       case "cancelado": return "Cancelado";
       default: return status;
     }
@@ -147,8 +129,7 @@ export default function VizualizarChamados() {
 
   const filteredChamados = chamados.filter(chamado => {
     const matchesSearch = chamado.titulo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         chamado.descricao?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         chamado.usuario_nome?.toLowerCase().includes(searchTerm.toLowerCase());
+                         chamado.descricao?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = filterStatus === "todos" || chamado.status === filterStatus;
     
@@ -159,7 +140,7 @@ export default function VizualizarChamados() {
     total: chamados.length,
     pendentes: chamados.filter(c => c.status === "pendente").length,
     emAndamento: chamados.filter(c => c.status === "em andamento").length,
-    concluidos: chamados.filter(c => c.status === "concluído").length
+    concluidos: chamados.filter(c => c.status === "concluido").length
   };
 
   if (loading) {
@@ -292,7 +273,7 @@ export default function VizualizarChamados() {
                           <div className="flex items-center gap-4 text-xs text-gray-500">
                             <span className="flex items-center gap-1">
                               <User className="h-3 w-3" />
-                              {chamado.usuario_nome}
+                              Usuário #{chamado.usuario_id}
                             </span>
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
@@ -305,9 +286,7 @@ export default function VizualizarChamados() {
                             {getStatusIcon(chamado.status)}
                             {getStatusLabel(chamado.status)}
                           </Badge>
-                          <Badge className={getPrioridadeColor(chamado.prioridade)}>
-                            {chamado.prioridade}
-                          </Badge>
+                          {/* prioridade removida do banco */}
                         </div>
                       </div>
                     </CardContent>
@@ -334,18 +313,13 @@ export default function VizualizarChamados() {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-500">Solicitante:</span>
-                          <span className="font-medium">{selectedChamado.usuario_nome}</span>
+                          <span className="font-medium">Usuário #{selectedChamado.usuario_id}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Data:</span>
                           <span>{new Date(selectedChamado.criado_em).toLocaleDateString('pt-BR')}</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Prioridade:</span>
-                          <Badge className={getPrioridadeColor(selectedChamado.prioridade)}>
-                            {selectedChamado.prioridade}
-                          </Badge>
-                        </div>
+                        {/* prioridade removida */}
                       </div>
                     </div>
 

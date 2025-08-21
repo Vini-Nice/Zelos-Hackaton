@@ -37,9 +37,8 @@ export default function ChamadosUsuarios() {
   const fetchChamados = async () => {
     try {
       const response = await apiRequest("/api/chamados");
-      if (response.success) {
-        setChamados(response.data || []);
-      }
+      const data = Array.isArray(response) ? response : response?.data;
+      setChamados(data || []);
     } catch (error) {
       console.error("Erro ao carregar chamados:", error);
     } finally {
@@ -51,7 +50,7 @@ export default function ChamadosUsuarios() {
     switch (status) {
       case "pendente": return "bg-yellow-100 text-yellow-800";
       case "em andamento": return "bg-blue-100 text-blue-800";
-      case "concluído": return "bg-green-100 text-green-800";
+      case "concluido": return "bg-green-100 text-green-800";
       case "cancelado": return "bg-red-100 text-red-800";
       default: return "bg-gray-100 text-gray-800";
     }
@@ -61,18 +60,9 @@ export default function ChamadosUsuarios() {
     switch (status) {
       case "pendente": return <Clock className="h-4 w-4" />;
       case "em andamento": return <AlertTriangle className="h-4 w-4" />;
-      case "concluído": return <CheckCircle className="h-4 w-4" />;
+      case "concluido": return <CheckCircle className="h-4 w-4" />;
       case "cancelado": return <XCircle className="h-4 w-4" />;
       default: return <Clock className="h-4 w-4" />;
-    }
-  };
-
-  const getPrioridadeColor = (prioridade) => {
-    switch (prioridade) {
-      case "alta": return "bg-red-100 text-red-800";
-      case "média": return "bg-yellow-100 text-yellow-800";
-      case "baixa": return "bg-green-100 text-green-800";
-      default: return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -80,7 +70,7 @@ export default function ChamadosUsuarios() {
     switch (status) {
       case "pendente": return "Pendente";
       case "em andamento": return "Em Andamento";
-      case "concluído": return "Concluído";
+      case "concluido": return "Concluído";
       case "cancelado": return "Cancelado";
       default: return status;
     }
@@ -88,11 +78,10 @@ export default function ChamadosUsuarios() {
 
   const filteredChamados = chamados.filter(chamado => {
     const matchesSearch = chamado.titulo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         chamado.descricao?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         chamado.usuario_nome?.toLowerCase().includes(searchTerm.toLowerCase());
+                         chamado.descricao?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = filterStatus === "todos" || chamado.status === filterStatus;
-    const matchesPrioridade = filterPrioridade === "todos" || chamado.prioridade === filterPrioridade;
+    const matchesPrioridade = true;
     
     return matchesSearch && matchesStatus && matchesPrioridade;
   });
@@ -101,7 +90,7 @@ export default function ChamadosUsuarios() {
     total: chamados.length,
     pendentes: chamados.filter(c => c.status === "pendente").length,
     emAndamento: chamados.filter(c => c.status === "em andamento").length,
-    concluidos: chamados.filter(c => c.status === "concluído").length,
+    concluidos: chamados.filter(c => c.status === "concluido").length,
     cancelados: chamados.filter(c => c.status === "cancelado").length
   };
 
@@ -219,18 +208,7 @@ export default function ChamadosUsuarios() {
                   </SelectContent>
                 </Select>
 
-                {/* Filtro por Prioridade */}
-                <Select value={filterPrioridade} onValueChange={setFilterPrioridade}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filtrar por prioridade" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todas as prioridades</SelectItem>
-                    <SelectItem value="alta">Alta</SelectItem>
-                    <SelectItem value="média">Média</SelectItem>
-                    <SelectItem value="baixa">Baixa</SelectItem>
-                  </SelectContent>
-                </Select>
+                {/* Prioridade removida */}
 
                 {/* Contador */}
                 <div className="flex items-center justify-center bg-gray-100 rounded-lg px-4">
@@ -287,7 +265,7 @@ export default function ChamadosUsuarios() {
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2">
                               <User className="h-4 w-4 text-gray-400" />
-                              <span className="text-gray-700">{chamado.usuario_nome}</span>
+                              <span className="text-gray-700">Usuário #{chamado.usuario_id}</span>
                             </div>
                           </td>
                           <td className="py-3 px-4">
@@ -296,11 +274,7 @@ export default function ChamadosUsuarios() {
                               {getStatusLabel(chamado.status)}
                             </Badge>
                           </td>
-                          <td className="py-3 px-4">
-                            <Badge className={getPrioridadeColor(chamado.prioridade)}>
-                              {chamado.prioridade}
-                            </Badge>
-                          </td>
+                          {/* prioridade removida */}
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2">
                               <Calendar className="h-4 w-4 text-gray-400" />
@@ -310,7 +284,7 @@ export default function ChamadosUsuarios() {
                             </div>
                           </td>
                           <td className="py-3 px-4 text-gray-700">
-                            {chamado.tecnico_nome || "Não atribuído"}
+                            {chamado.tecnico_id ? `Técnico #${chamado.tecnico_id}` : "Não atribuído"}
                           </td>
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2">

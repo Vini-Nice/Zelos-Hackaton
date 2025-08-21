@@ -25,15 +25,15 @@ const apontamentoController = {
   async criarApontamento(req, res) {
     try {
       const { chamado_id, tecnico_id, descricao, comeco, fim } = req.body;
-      if (!chamado_id || !tecnico_id || !comeco || !fim) {
-        return res.status(400).json({ erro: 'Campos obrigatórios faltando: chamado_id, tecnico_id, comeco, fim' });
+      if (!chamado_id || !tecnico_id || !comeco) {
+        return res.status(400).json({ erro: 'Campos obrigatórios faltando: chamado_id, tecnico_id, comeco' });
       }
       const apontamentoData = { 
         chamado_id, 
         tecnico_id, 
         descricao: descricao || null, 
         comeco, 
-        fim 
+        fim: fim || null 
       };
       const id = await criarApontamento(apontamentoData);
       res.status(201).json({ id, mensagem: 'Apontamento criado com sucesso' });

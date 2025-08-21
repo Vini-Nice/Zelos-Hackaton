@@ -23,12 +23,7 @@ export default function CadastroTecnico() {
     email: "",
     senha: "",
     confirmarSenha: "",
-    especialidade: "",
-    departamento: "",
-    telefone: "",
-    matricula: "",
-    experiencia: "",
-    disponibilidade: "disponivel"
+    funcao: "tecnico"
   });
 
   const handleInputChange = (field, value) => {
@@ -66,13 +61,7 @@ export default function CadastroTecnico() {
           nome: formData.nome,
           email: formData.email,
           senha: formData.senha,
-          funcao: "tecnico",
-          departamento: formData.departamento,
-          telefone: formData.telefone,
-          matricula: formData.matricula,
-          especialidade: formData.especialidade,
-          experiencia: formData.experiencia,
-          disponibilidade: formData.disponibilidade
+          funcao: "tecnico"
         })
       });
 
@@ -83,12 +72,7 @@ export default function CadastroTecnico() {
           email: "",
           senha: "",
           confirmarSenha: "",
-          especialidade: "",
-          departamento: "",
-          telefone: "",
-          matricula: "",
-          experiencia: "",
-          disponibilidade: "disponivel"
+          funcao: "tecnico"
         });
       } else {
         setError(response.message || "Erro ao cadastrar técnico");
@@ -174,102 +158,7 @@ export default function CadastroTecnico() {
                   />
                 </div>
 
-                {/* Matrícula */}
-                <div className="space-y-2">
-                  <Label htmlFor="matricula">Matrícula *</Label>
-                  <Input
-                    id="matricula"
-                    type="text"
-                    value={formData.matricula}
-                    onChange={(e) => handleInputChange("matricula", e.target.value)}
-                    placeholder="Digite a matrícula"
-                    required
-                  />
-                </div>
-
-                {/* Especialidade */}
-                <div className="space-y-2">
-                  <Label htmlFor="especialidade">Especialidade *</Label>
-                  <Select
-                    value={formData.especialidade}
-                    onValueChange={(value) => handleInputChange("especialidade", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a especialidade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Hardware">Hardware</SelectItem>
-                      <SelectItem value="Software">Software</SelectItem>
-                      <SelectItem value="Rede">Rede</SelectItem>
-                      <SelectItem value="Sistema">Sistema</SelectItem>
-                      <SelectItem value="Impressora">Impressora</SelectItem>
-                      <SelectItem value="Telefonia">Telefonia</SelectItem>
-                      <SelectItem value="Geral">Geral</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Departamento */}
-                <div className="space-y-2">
-                  <Label htmlFor="departamento">Departamento *</Label>
-                  <Select
-                    value={formData.departamento}
-                    onValueChange={(value) => handleInputChange("departamento", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o departamento" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="TI">TI</SelectItem>
-                      <SelectItem value="Suporte">Suporte</SelectItem>
-                      <SelectItem value="Manutenção">Manutenção</SelectItem>
-                      <SelectItem value="Infraestrutura">Infraestrutura</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Telefone */}
-                <div className="space-y-2">
-                  <Label htmlFor="telefone">Telefone *</Label>
-                  <Input
-                    id="telefone"
-                    type="tel"
-                    value={formData.telefone}
-                    onChange={(e) => handleInputChange("telefone", e.target.value)}
-                    placeholder="(11) 99999-9999"
-                    required
-                  />
-                </div>
-
-                {/* Experiência */}
-                <div className="space-y-2">
-                  <Label htmlFor="experiencia">Experiência Profissional</Label>
-                  <Textarea
-                    id="experiencia"
-                    value={formData.experiencia}
-                    onChange={(e) => handleInputChange("experiencia", e.target.value)}
-                    placeholder="Descreva a experiência profissional do técnico..."
-                    rows={3}
-                  />
-                </div>
-
-                {/* Disponibilidade */}
-                <div className="space-y-2">
-                  <Label htmlFor="disponibilidade">Disponibilidade *</Label>
-                  <Select
-                    value={formData.disponibilidade}
-                    onValueChange={(value) => handleInputChange("disponibilidade", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a disponibilidade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="disponivel">Disponível</SelectItem>
-                      <SelectItem value="ocupado">Ocupado</SelectItem>
-                      <SelectItem value="ausente">Ausente</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {/* Campos extras removidos por não existirem no banco */}
 
                 {/* Senha */}
                 <div className="space-y-2">

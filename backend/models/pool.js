@@ -1,5 +1,6 @@
 import { create, readAll, read, update, deleteRecord } from '../config/database.js';
 
+// Este módulo usa a tabela 'pool' conforme definido no banco
 const listarPools = async () => {
   try {
     return await readAll('pool');

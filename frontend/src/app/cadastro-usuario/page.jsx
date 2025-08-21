@@ -22,10 +22,7 @@ export default function CadastroUsuario() {
     email: "",
     senha: "",
     confirmarSenha: "",
-    funcao: "usuario",
-    departamento: "",
-    telefone: "",
-    matricula: ""
+    funcao: "aluno"
   });
 
   const handleInputChange = (field, value) => {
@@ -64,9 +61,6 @@ export default function CadastroUsuario() {
           email: formData.email,
           senha: formData.senha,
           funcao: formData.funcao,
-          departamento: formData.departamento,
-          telefone: formData.telefone,
-          matricula: formData.matricula
         })
       });
 
@@ -77,10 +71,7 @@ export default function CadastroUsuario() {
           email: "",
           senha: "",
           confirmarSenha: "",
-          funcao: "usuario",
-          departamento: "",
-          telefone: "",
-          matricula: ""
+          funcao: "aluno"
         });
       } else {
         setError(response.message || "Erro ao cadastrar usuário");
@@ -166,52 +157,7 @@ export default function CadastroUsuario() {
                   />
                 </div>
 
-                {/* Matrícula */}
-                <div className="space-y-2">
-                  <Label htmlFor="matricula">Matrícula *</Label>
-                  <Input
-                    id="matricula"
-                    type="text"
-                    value={formData.matricula}
-                    onChange={(e) => handleInputChange("matricula", e.target.value)}
-                    placeholder="Digite a matrícula"
-                    required
-                  />
-                </div>
-
-                {/* Departamento */}
-                <div className="space-y-2">
-                  <Label htmlFor="departamento">Departamento *</Label>
-                  <Select
-                    value={formData.departamento}
-                    onValueChange={(value) => handleInputChange("departamento", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o departamento" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="TI">TI</SelectItem>
-                      <SelectItem value="RH">RH</SelectItem>
-                      <SelectItem value="Financeiro">Financeiro</SelectItem>
-                      <SelectItem value="Marketing">Marketing</SelectItem>
-                      <SelectItem value="Vendas">Vendas</SelectItem>
-                      <SelectItem value="Operações">Operações</SelectItem>
-                      <SelectItem value="Administrativo">Administrativo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Telefone */}
-                <div className="space-y-2">
-                  <Label htmlFor="telefone">Telefone</Label>
-                  <Input
-                    id="telefone"
-                    type="tel"
-                    value={formData.telefone}
-                    onChange={(e) => handleInputChange("telefone", e.target.value)}
-                    placeholder="(11) 99999-9999"
-                  />
-                </div>
+                {/* Campos extras removidos por não existirem no banco */}
 
                 {/* Função */}
                 <div className="space-y-2">
@@ -224,7 +170,7 @@ export default function CadastroUsuario() {
                       <SelectValue placeholder="Selecione a função" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="usuario">Usuário Comum</SelectItem>
+                      <SelectItem value="aluno">Usuário Comum</SelectItem>
                       <SelectItem value="tecnico">Técnico</SelectItem>
                       <SelectItem value="admin">Administrador</SelectItem>
                     </SelectContent>
