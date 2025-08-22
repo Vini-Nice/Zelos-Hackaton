@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { 
   FileText, 
   Search, 
-  Filter,
   Eye,
   Clock,
   CheckCircle,
@@ -28,7 +27,6 @@ export default function ChamadosUsuarios() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("todos");
-  const [filterPrioridade, setFilterPrioridade] = useState("todos");
 
   useEffect(() => {
     fetchChamados();
@@ -76,14 +74,25 @@ export default function ChamadosUsuarios() {
     }
   };
 
+  const handleStatusChange = async (chamadoId, newStatus) => {
+    try {
+      await apiRequest(`/api/chamados/${chamadoId}`, {
+        method: "PUT",
+        body: JSON.stringify({ status: newStatus })
+      });
+      fetchChamados();
+    } catch (error) {
+      console.error("Erro ao atualizar status:", error);
+    }
+  };
+
   const filteredChamados = chamados.filter(chamado => {
     const matchesSearch = chamado.titulo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          chamado.descricao?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = filterStatus === "todos" || chamado.status === filterStatus;
-    const matchesPrioridade = true;
     
-    return matchesSearch && matchesStatus && matchesPrioridade;
+    return matchesSearch && matchesStatus;
   });
 
   const stats = {
@@ -119,103 +128,82 @@ export default function ChamadosUsuarios() {
           {/* Estatísticas */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Total</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-                  </div>
-                  <FileText className="h-8 w-8 text-blue-600" />
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Total</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
                 </div>
+                <FileText className="h-8 w-8 text-blue-600" />
               </CardContent>
             </Card>
-            
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Pendentes</p>
-                    <p className="text-2xl font-bold text-yellow-600">{stats.pendentes}</p>
-                  </div>
-                  <Clock className="h-8 w-8 text-yellow-600" />
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Pendentes</p>
+                  <p className="text-2xl font-bold text-yellow-600">{stats.pendentes}</p>
                 </div>
+                <Clock className="h-8 w-8 text-yellow-600" />
               </CardContent>
             </Card>
-            
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Em Andamento</p>
-                    <p className="text-2xl font-bold text-blue-600">{stats.emAndamento}</p>
-                  </div>
-                  <AlertTriangle className="h-8 w-8 text-blue-600" />
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Em Andamento</p>
+                  <p className="text-2xl font-bold text-blue-600">{stats.emAndamento}</p>
                 </div>
+                <AlertTriangle className="h-8 w-8 text-blue-600" />
               </CardContent>
             </Card>
-            
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Concluídos</p>
-                    <p className="text-2xl font-bold text-green-600">{stats.concluidos}</p>
-                  </div>
-                  <CheckCircle className="h-8 w-8 text-green-600" />
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Concluídos</p>
+                  <p className="text-2xl font-bold text-green-600">{stats.concluidos}</p>
                 </div>
+                <CheckCircle className="h-8 w-8 text-green-600" />
               </CardContent>
             </Card>
-            
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Cancelados</p>
-                    <p className="text-2xl font-bold text-red-600">{stats.cancelados}</p>
-                  </div>
-                  <XCircle className="h-8 w-8 text-red-600" />
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Cancelados</p>
+                  <p className="text-2xl font-bold text-red-600">{stats.cancelados}</p>
                 </div>
+                <XCircle className="h-8 w-8 text-red-600" />
               </CardContent>
             </Card>
           </div>
 
           {/* Filtros e Busca */}
           <Card>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {/* Busca */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Buscar chamados..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
+            <CardContent className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Buscar chamados..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
 
-                {/* Filtro por Status */}
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filtrar por status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos os status</SelectItem>
-                    <SelectItem value="pendente">Pendentes</SelectItem>
-                    <SelectItem value="em andamento">Em Andamento</SelectItem>
-                    <SelectItem value="concluído">Concluídos</SelectItem>
-                    <SelectItem value="cancelado">Cancelados</SelectItem>
-                  </SelectContent>
-                </Select>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os status</SelectItem>
+                  <SelectItem value="pendente">Pendentes</SelectItem>
+                  <SelectItem value="em andamento">Em Andamento</SelectItem>
+                  <SelectItem value="concluido">Concluídos</SelectItem>
+                  <SelectItem value="cancelado">Cancelados</SelectItem>
+                </SelectContent>
+              </Select>
 
-                {/* Prioridade removida */}
-
-                {/* Contador */}
-                <div className="flex items-center justify-center bg-gray-100 rounded-lg px-4">
-                  <span className="text-sm text-gray-600">
-                    {filteredChamados.length} chamado{filteredChamados.length !== 1 ? 's' : ''}
-                  </span>
-                </div>
+              <div className="flex items-center justify-center bg-gray-100 rounded-lg px-4">
+                <span className="text-sm text-gray-600">
+                  {filteredChamados.length} chamado{filteredChamados.length !== 1 ? 's' : ''}
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -239,7 +227,6 @@ export default function ChamadosUsuarios() {
                       <th className="py-3 px-4 font-semibold text-gray-900">Chamado</th>
                       <th className="py-3 px-4 font-semibold text-gray-900">Solicitante</th>
                       <th className="py-3 px-4 font-semibold text-gray-900">Status</th>
-                      <th className="py-3 px-4 font-semibold text-gray-900">Prioridade</th>
                       <th className="py-3 px-4 font-semibold text-gray-900">Data</th>
                       <th className="py-3 px-4 font-semibold text-gray-900">Técnico</th>
                       <th className="py-3 px-4 font-semibold text-gray-900">Ações</th>
@@ -265,16 +252,25 @@ export default function ChamadosUsuarios() {
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2">
                               <User className="h-4 w-4 text-gray-400" />
-                              <span className="text-gray-700">Usuário #{chamado.usuario_id}</span>
+                              <span className="text-gray-700">Usuário #{chamado.usuario_id} </span>
                             </div>
                           </td>
                           <td className="py-3 px-4">
-                            <Badge className={`flex items-center gap-1 ${getStatusColor(chamado.status)}`}>
-                              {getStatusIcon(chamado.status)}
-                              {getStatusLabel(chamado.status)}
-                            </Badge>
+                            <Select
+                              value={chamado.status}
+                              onValueChange={(value) => handleStatusChange(chamado.id, value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="pendente">Pendente</SelectItem>
+                                <SelectItem value="em andamento">Em Andamento</SelectItem>
+                                <SelectItem value="concluido">Concluído</SelectItem>
+                                <SelectItem value="cancelado">Cancelado</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </td>
-                          {/* prioridade removida */}
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2">
                               <Calendar className="h-4 w-4 text-gray-400" />
@@ -287,22 +283,20 @@ export default function ChamadosUsuarios() {
                             {chamado.tecnico_id ? `Técnico #${chamado.tecnico_id}` : "Não atribuído"}
                           </td>
                           <td className="py-3 px-4">
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => router.push(`/chamado/${chamado.id}`)}
-                                className="h-8 w-8 p-0"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => router.push(`/chamado/${chamado.id}`)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="7" className="py-8 text-center text-gray-500">
+                        <td colSpan="6" className="py-8 text-center text-gray-500">
                           Nenhum chamado encontrado
                         </td>
                       </tr>

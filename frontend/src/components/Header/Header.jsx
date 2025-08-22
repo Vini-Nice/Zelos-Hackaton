@@ -37,7 +37,8 @@ export default function Header() {
         >
           {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
-        <h1 className="text-xl md:text-2xl text-gray-900 dark:text-gray-100 font-bold">ZELOS</h1>
+      <img src="/logo_e.png" alt="" className="w-40" />
+
       </div>
 
       {/* Menu Mobile */}

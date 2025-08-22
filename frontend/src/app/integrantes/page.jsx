@@ -4,21 +4,26 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Users, 
-  Search, 
+import {
+  Users,
+  Search,
   Plus,
   Edit,
   Trash2,
-  Eye,
-  EyeOff,
   UserPlus,
   UserCheck,
-  UserX
+  UserX,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import DashboardLayout from "@/components/DashboardLayout/DashboardLayout";
 import { apiRequest } from "@/lib/auth";
 import { useAuth } from "@/components/AuthProvider/AuthProvider";
@@ -31,19 +36,18 @@ export default function Integrantes() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterFuncao, setFilterFuncao] = useState("todos");
   const [filterStatus, setFilterStatus] = useState("todos");
-  const [showPassword, setShowPassword] = useState({});
   const [editingUser, setEditingUser] = useState(null);
   const [formData, setFormData] = useState({
     nome: "",
     email: "",
     senha: "",
     funcao: "aluno",
-    status: "ativo"
+    status: "ativo",
   });
 
   useEffect(() => {
-    if (user?.funcao !== 'admin') {
-      router.push('/');
+    if (user?.funcao !== "admin") {
+      router.push("/");
       return;
     }
     fetchUsuarios();
@@ -65,7 +69,7 @@ export default function Integrantes() {
     try {
       await apiRequest("/api/usuarios", {
         method: "POST",
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
       setFormData({ nome: "", email: "", senha: "", funcao: "aluno", status: "ativo" });
       fetchUsuarios();
@@ -80,11 +84,15 @@ export default function Integrantes() {
       delete updateData.id;
       delete updateData.criado_em;
       delete updateData.atualizado_em;
-      
+
+      // não enviar senha se estiver vazia
+      if (!updateData.senha) delete updateData.senha;
+
       await apiRequest(`/api/usuarios/${userId}`, {
         method: "PUT",
-        body: JSON.stringify(updateData)
+        body: JSON.stringify(updateData),
       });
+
       setEditingUser(null);
       fetchUsuarios();
     } catch (error) {
@@ -94,10 +102,10 @@ export default function Integrantes() {
 
   const handleDeleteUser = async (userId) => {
     if (!confirm("Tem certeza que deseja excluir este usuário?")) return;
-    
+
     try {
       await apiRequest(`/api/usuarios/${userId}`, {
-        method: "DELETE"
+        method: "DELETE",
       });
       fetchUsuarios();
     } catch (error) {
@@ -107,27 +115,36 @@ export default function Integrantes() {
 
   const getFuncaoColor = (funcao) => {
     switch (funcao) {
-      case "admin": return "bg-red-100 text-red-800";
-      case "tecnico": return "bg-blue-100 text-blue-800";
-      case "aluno": return "bg-green-100 text-green-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "admin":
+        return "bg-red-100 text-red-800";
+      case "tecnico":
+        return "bg-blue-100 text-blue-800";
+      case "aluno":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusColor = (status) => {
-    return status === "ativo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
+    return status === "ativo"
+      ? "bg-green-100 text-green-800"
+      : "bg-red-100 text-red-800";
   };
 
-  const filteredUsuarios = usuarios.filter(usuario => {
-    const matchesSearch = usuario.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         usuario.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFuncao = filterFuncao === "todos" || usuario.funcao === filterFuncao;
-    const matchesStatus = filterStatus === "todos" || usuario.status === filterStatus;
-    
+  const filteredUsuarios = usuarios.filter((usuario) => {
+    const matchesSearch =
+      usuario.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      usuario.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFuncao =
+      filterFuncao === "todos" || usuario.funcao === filterFuncao;
+    const matchesStatus =
+      filterStatus === "todos" || usuario.status === filterStatus;
+
     return matchesSearch && matchesFuncao && matchesStatus;
   });
 
-  if (user?.funcao !== 'admin') {
+  if (user?.funcao !== "admin") {
     return null;
   }
 
@@ -148,10 +165,24 @@ export default function Integrantes() {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Gerenciar Usuários</h1>
-              <p className="text-gray-600">Gerencie todos os usuários do sistema</p>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Gerenciar Usuários
+              </h1>
+              <p className="text-gray-600">
+                Gerencie todos os usuários do sistema
+              </p>
             </div>
-            <Button onClick={() => setFormData({ nome: "", email: "", senha: "", funcao: "aluno", status: "ativo" })}>
+            <Button
+              onClick={() =>
+                setFormData({
+                  nome: "",
+                  email: "",
+                  senha: "",
+                  funcao: "aluno",
+                  status: "ativo",
+                })
+              }
+            >
               <UserPlus className="h-4 w-4 mr-2" />
               Novo Usuário
             </Button>
@@ -166,28 +197,42 @@ export default function Integrantes() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleCreateUser} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <form
+                onSubmit={handleCreateUser}
+                className="grid grid-cols-1 md:grid-cols-3 gap-4"
+              >
                 <Input
                   placeholder="Nome completo"
                   value={formData.nome}
-                  onChange={(e) => setFormData({...formData, nome: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, nome: e.target.value })
+                  }
                   required
                 />
                 <Input
                   type="email"
                   placeholder="Email"
                   value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                   required
                 />
                 <Input
                   type="password"
                   placeholder="Senha"
                   value={formData.senha}
-                  onChange={(e) => setFormData({...formData, senha: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, senha: e.target.value })
+                  }
                   required
                 />
-                <Select value={formData.funcao} onValueChange={(value) => setFormData({...formData, funcao: value})}>
+                <Select
+                  value={formData.funcao}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, funcao: value })
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -197,7 +242,12 @@ export default function Integrantes() {
                     <SelectItem value="admin">Admin</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={formData.status} onValueChange={(value) => setFormData({...formData, status: value})}>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, status: value })
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -214,49 +264,6 @@ export default function Integrantes() {
             </CardContent>
           </Card>
 
-          {/* Filtros */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Buscar usuários..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <Select value={filterFuncao} onValueChange={setFilterFuncao}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filtrar por função" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todas as funções</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="tecnico">Técnico</SelectItem>
-                    <SelectItem value="aluno">Aluno</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filtrar por status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos os status</SelectItem>
-                    <SelectItem value="ativo">Ativo</SelectItem>
-                    <SelectItem value="inativo">Inativo</SelectItem>
-                  </SelectContent>
-                </Select>
-                <div className="flex items-center justify-center bg-gray-100 rounded-lg px-4">
-                  <span className="text-sm text-gray-600">
-                    {filteredUsuarios.length} usuário{filteredUsuarios.length !== 1 ? 's' : ''}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Lista de Usuários */}
           <Card>
             <CardHeader>
@@ -270,12 +277,24 @@ export default function Integrantes() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-gray-200">
-                      <th className="py-3 px-4 font-semibold text-gray-900">Usuário</th>
-                      <th className="py-3 px-4 font-semibold text-gray-900">Email</th>
-                      <th className="py-3 px-4 font-semibold text-gray-900">Função</th>
-                      <th className="py-3 px-4 font-semibold text-gray-900">Status</th>
-                      <th className="py-3 px-4 font-semibold text-gray-900">Criado em</th>
-                      <th className="py-3 px-4 font-semibold text-gray-900">Ações</th>
+                      <th className="py-3 px-4 font-semibold text-gray-900">
+                        Usuário
+                      </th>
+                      <th className="py-3 px-4 font-semibold text-gray-900">
+                        Email
+                      </th>
+                      <th className="py-3 px-4 font-semibold text-gray-900">
+                        Função
+                      </th>
+                      <th className="py-3 px-4 font-semibold text-gray-900">
+                        Status
+                      </th>
+                      <th className="py-3 px-4 font-semibold text-gray-900">
+                        Criado em
+                      </th>
+                      <th className="py-3 px-4 font-semibold text-gray-900">
+                        Ações
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -288,11 +307,17 @@ export default function Integrantes() {
                       >
                         <td className="py-3 px-4">
                           <div>
-                            <p className="font-medium text-gray-900">{usuario.nome}</p>
-                            <p className="text-sm text-gray-500">ID: {usuario.id}</p>
+                            <p className="font-medium text-gray-900">
+                              {usuario.nome}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              ID: {usuario.id}
+                            </p>
                           </div>
                         </td>
-                        <td className="py-3 px-4 text-gray-700">{usuario.email}</td>
+                        <td className="py-3 px-4 text-gray-700">
+                          {usuario.email}
+                        </td>
                         <td className="py-3 px-4">
                           <Badge className={getFuncaoColor(usuario.funcao)}>
                             {usuario.funcao}
@@ -309,14 +334,16 @@ export default function Integrantes() {
                           </Badge>
                         </td>
                         <td className="py-3 px-4 text-gray-700">
-                          {new Date(usuario.criado_em).toLocaleDateString('pt-BR')}
+                          {new Date(usuario.criado_em).toLocaleDateString(
+                            "pt-BR"
+                          )}
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => setEditingUser(usuario)}
+                              onClick={() => setEditingUser({ ...usuario })}
                               className="h-8 w-8 p-0"
                             >
                               <Edit className="h-4 w-4" />
@@ -340,6 +367,93 @@ export default function Integrantes() {
           </Card>
         </div>
       </div>
+
+      {/* Modal de Edição */}
+      <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Usuário</DialogTitle>
+          </DialogHeader>
+
+          {editingUser && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleUpdateUser(editingUser.id);
+              }}
+              className="space-y-4"
+            >
+              <Input
+                placeholder="Nome completo"
+                value={editingUser.nome}
+                onChange={(e) =>
+                  setEditingUser({ ...editingUser, nome: e.target.value })
+                }
+                required
+              />
+              <Input
+                type="email"
+                placeholder="Email"
+                value={editingUser.email}
+                onChange={(e) =>
+                  setEditingUser({ ...editingUser, email: e.target.value })
+                }
+                required
+              />
+              <Input
+                type="password"
+                placeholder="Nova senha (opcional)"
+                value={editingUser.senha || ""}
+                onChange={(e) =>
+                  setEditingUser({ ...editingUser, senha: e.target.value })
+                }
+              />
+              <Select
+                value={editingUser.funcao}
+                onValueChange={(value) =>
+                  setEditingUser({ ...editingUser, funcao: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a função" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="aluno">Aluno</SelectItem>
+                  <SelectItem value="tecnico">Técnico</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={editingUser.status}
+                onValueChange={(value) =>
+                  setEditingUser({ ...editingUser, status: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ativo">Ativo</SelectItem>
+                  <SelectItem value="inativo">Inativo</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <DialogFooter>
+                <Button type="submit" className="bg-blue-600 text-white">
+                  Salvar
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditingUser(null)}
+                >
+                  Cancelar
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

@@ -4,14 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { 
-  Home, 
-  Plus, 
-  MessageSquare, 
-  User, 
-  LogOut, 
-  BookOpen, 
-  GraduationCap, 
+import {
+  Home,
+  Plus,
+  MessageSquare,
+  User,
+  LogOut,
+  BookOpen,
+  GraduationCap,
   HelpCircle,
   Users,
   Settings,
@@ -42,8 +42,6 @@ export default function ZelosDashboard({ onToggle }) {
     if (user?.funcao === "admin") {
       return [
         { href: "/home-adm", icon: Home, label: "Dashboard Admin" },
-        { href: "/cadastro-usuario", icon: UserPlus, label: "Cadastrar Usuário" },
-        { href: "/cadastro-tecnico", icon: UserPlus, label: "Cadastrar Técnico" },
         { href: "/integrantes", icon: Users, label: "Gerenciar Usuários" },
         { href: "/chamados-usuarios", icon: FileText, label: "Todos os Chamados" },
       ];
@@ -72,9 +70,8 @@ export default function ZelosDashboard({ onToggle }) {
   const allRoutes = [...getRoutesByUserType(), ...commonRoutes];
 
   return (
-    <aside className={`bg-white border-r border-gray-200 min-h-screen mt-14 fixed left-0 top-0 transition-all duration-300 ${
-      isCollapsed ? 'w-16' : 'w-64'
-    }`}>
+    <aside className={`bg-white border-r border-gray-200 min-h-screen mt-14 fixed left-0 top-0 transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'
+      }`}>
       {/* Botão para colapsar/expandir */}
       <div className="flex justify-end p-2 border-b border-gray-200">
         <Button
@@ -97,11 +94,10 @@ export default function ZelosDashboard({ onToggle }) {
           <Link href={href} key={href} passHref>
             <Button
               variant={isActive(href) ? "default" : "ghost"}
-              className={`w-full justify-start ${
-                isActive(href) 
-                  ? "text-white bg-blue-600" 
+              className={`w-full justify-start ${isActive(href)
+                  ? "text-white bg-blue-600"
                   : "text-gray-700 hover:bg-gray-100"
-              } ${isCollapsed ? 'px-2' : 'px-4'}`}
+                } ${isCollapsed ? 'px-2' : 'px-4'}`}
               title={isCollapsed ? label : undefined}
             >
               <Icon className={`h-4 w-4 ${isCollapsed ? 'mr-0' : 'mr-3'}`} />
@@ -111,12 +107,11 @@ export default function ZelosDashboard({ onToggle }) {
         ))}
 
         {/* Botão de logout */}
-        <Button 
-          onClick={handleLogout} 
-          variant="ghost" 
-          className={`w-full justify-start text-gray-700 hover:bg-gray-100 ${
-            isCollapsed ? 'px-2' : 'px-4'
-          }`}
+        <Button
+          onClick={handleLogout}
+          variant="ghost"
+          className={`w-full justify-start text-gray-700 hover:bg-gray-100 ${isCollapsed ? 'px-2' : 'px-4'
+            }`}
           title={isCollapsed ? "Sair" : undefined}
         >
           <LogOut className={`h-4 w-4 ${isCollapsed ? 'mr-0' : 'mr-3'}`} />
