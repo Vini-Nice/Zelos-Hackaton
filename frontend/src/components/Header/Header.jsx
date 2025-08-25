@@ -1,26 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Bell, LogOut, User, Menu, X } from "lucide-react";
+import { LogOut, User, Menu, X } from "lucide-react";
 import UserAvatar from "@/components/UserAvatar/UserAvatar";
 import DarkModeToggle from "@/components/DarkModeToggle/DarkModeToggle";
+
 import { useAuth } from "@/components/AuthProvider/AuthProvider";
 import { useRouter } from "next/navigation";
 
 export default function Header() {
-  const [open, setOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, logout } = useAuth();
   const router = useRouter();
-
-  const notificacoes = [
-    { id: 1, mensagem: "Seu chamado 'Erro na impressora' foi resolvido", lida: false },
-    { id: 2, mensagem: "Nova atualização disponível no sistema", lida: false },
-    { id: 3, mensagem: "Manutenção programada dia 20/08 às 02h", lida: true },
-  ];
-
-  const naoLidas = notificacoes.filter(n => !n.lida).length;
 
   const handleLogout = () => {
     logout();
@@ -37,8 +29,7 @@ export default function Header() {
         >
           {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
-      <img src="/logo_e.png" alt="" className="w-40" />
-
+        <img src="/logo_e.png" alt="" className="w-40" />
       </div>
 
       {/* Menu Mobile */}
@@ -78,53 +69,8 @@ export default function Header() {
         {/* Toggle de modo noturno */}
         <DarkModeToggle />
 
-        {/* Sino de notificações */}
-        <div className="relative">
-          <button
-            onClick={() => setOpen(!open)}
-            className="relative p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none"
-          >
-            <Bell className="h-5 w-5 md:h-6 md:w-6 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white" />
-            {naoLidas > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[18px] flex items-center justify-center">
-                {naoLidas}
-              </span>
-            )}
-          </button>
-
-          {open && (
-            <div className="absolute right-0 mt-2 w-72 md:w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
-              <div className="p-4">
-                <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Notificações</h2>
-                <div className="max-h-60 overflow-y-auto space-y-2">
-                  {notificacoes.length > 0 ? (
-                    notificacoes.map((n) => (
-                      <div
-                        key={n.id}
-                        className={`p-3 text-sm rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-                          !n.lida ? "font-semibold text-gray-900 dark:text-gray-100 bg-blue-50 dark:bg-blue-900/20" : "text-gray-600 dark:text-gray-400"
-                        }`}
-                      >
-                        <p className="mb-1">{n.mensagem}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-500">
-                          {!n.lida && <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mr-2"></span>}
-                          {new Date().toLocaleDateString('pt-BR')}
-                        </p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-gray-500 dark:text-gray-400 text-center py-4">Nenhuma notificação</p>
-                  )}
-                </div>
-                {notificacoes.length > 0 && (
-                  <button className="w-full mt-3 text-center text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
-                    Ver todas
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Sistema de notificações */}
+        {/* <NotificationSystem /> */}
 
         {/* Avatar do usuário com menu - Desktop */}
         <div className="relative hidden lg:block">

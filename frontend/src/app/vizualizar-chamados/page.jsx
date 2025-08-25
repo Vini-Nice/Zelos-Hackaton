@@ -241,7 +241,7 @@ export default function VizualizarChamados() {
                         <SelectItem value="todos">Todos os status</SelectItem>
                         <SelectItem value="pendente">Pendentes</SelectItem>
                         <SelectItem value="em andamento">Em Andamento</SelectItem>
-                        <SelectItem value="concluído">Concluídos</SelectItem>
+                        <SelectItem value="concluido">Concluídos</SelectItem>
                         <SelectItem value="cancelado">Cancelados</SelectItem>
                       </SelectContent>
                     </Select>
@@ -332,12 +332,12 @@ export default function VizualizarChamados() {
                         disabled={updatingStatus}
                       >
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="Selecione o status" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="pendente">Pendente</SelectItem>
                           <SelectItem value="em andamento">Em Andamento</SelectItem>
-                          <SelectItem value="concluído">Concluído</SelectItem>
+                          <SelectItem value="concluido">Concluído</SelectItem>
                           <SelectItem value="cancelado">Cancelado</SelectItem>
                         </SelectContent>
                       </Select>

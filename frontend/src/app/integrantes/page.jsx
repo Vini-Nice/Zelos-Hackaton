@@ -119,7 +119,7 @@ export default function Integrantes() {
         return "bg-red-100 text-red-800";
       case "tecnico":
         return "bg-blue-100 text-blue-800";
-      case "aluno":
+      case "usuario_comum":
         return "bg-green-100 text-green-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -234,10 +234,10 @@ export default function Integrantes() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Selecione a função" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="aluno">Aluno</SelectItem>
+                    <SelectItem value="usuario_comum">Usuário Comum</SelectItem>
                     <SelectItem value="tecnico">Técnico</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                   </SelectContent>
@@ -418,7 +418,7 @@ export default function Integrantes() {
                   <SelectValue placeholder="Selecione a função" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="aluno">Aluno</SelectItem>
+                  <SelectItem value="usuario_comum">Usuário Comum</SelectItem>
                   <SelectItem value="tecnico">Técnico</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>

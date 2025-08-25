@@ -44,15 +44,17 @@ export default function ZelosDashboard({ onToggle }) {
         { href: "/home-adm", icon: Home, label: "Dashboard Admin" },
         { href: "/integrantes", icon: Users, label: "Gerenciar Usuários" },
         { href: "/chamados-usuarios", icon: FileText, label: "Todos os Chamados" },
+        { href: "/apontamentos", icon: Wrench, label: "Apontamentos" },
       ];
     } else if (user?.funcao === "tecnico") {
       return [
         { href: "/home-manutencao", icon: Wrench, label: "Dashboard Técnico" },
         { href: "/vizualizar-chamados", icon: FileText, label: "Visualizar Chamados" },
       ];
-    } else if (user?.funcao === "aluno") {
+    } else if (user?.funcao === "usuario_comum") {
       return [
         { href: "/", icon: Home, label: "Página Principal" },
+        { href: "/abrir-chamado", icon: FileText, label: "Abrir Chamado" },
         { href: "/meus-chamados", icon: FileText, label: "Meus Chamados" },
       ];
     }
