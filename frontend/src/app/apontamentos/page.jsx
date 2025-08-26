@@ -19,7 +19,7 @@ import DashboardLayout from "@/components/DashboardLayout/DashboardLayout";
 import { useAuth } from "@/components/AuthProvider/AuthProvider";
 import { useRouter } from "next/navigation";
 
-// Dados mockados para demonstração
+// Dados mockados
 const mockApontamentos = [
   {
     id: 1,
@@ -27,7 +27,7 @@ const mockApontamentos = [
     chamado_id: 123,
     titulo_chamado: "Problema com impressora",
     descricao: "Verificado problema na impressora. Substituído cartucho e limpeza realizada.",
-    tempo_execucao: 45, // minutos
+    tempo_execucao: 45,
     status: "concluido",
     data: "2024-01-15T10:30:00",
     prioridade: "média"
@@ -89,6 +89,7 @@ const mockTecnicos = [
 export default function ApontamentosAdmin() {
   const { user } = useAuth();
   const router = useRouter();
+
   const [apontamentos, setApontamentos] = useState(mockApontamentos);
   const [tecnicoSelecionado, setTecnicoSelecionado] = useState("todos");
   const [periodoSelecionado, setPeriodoSelecionado] = useState("7dias");
@@ -97,23 +98,22 @@ export default function ApontamentosAdmin() {
   useEffect(() => {
     if (user?.funcao !== "admin") {
       router.push("/");
-      return;
     }
   }, [user, router]);
 
-  if (user?.funcao !== "admin") {
-    return null;
-  }
+  if (user?.funcao !== "admin") return null;
 
+  // Filtro de apontamentos
   const apontamentosFiltrados = apontamentos.filter(ap => {
     const matchTecnico = tecnicoSelecionado === "todos" || ap.tecnico === tecnicoSelecionado;
     const matchStatus = statusFiltro === "todos" || ap.status === statusFiltro;
     return matchTecnico && matchStatus;
   });
 
+  // Estatísticas
   const estatisticas = {
     totalApontamentos: apontamentosFiltrados.length,
-    tempoMedio: Math.round(apontamentosFiltrados.reduce((acc, ap) => acc + ap.tempo_execucao, 0) / apontamentosFiltrados.length || 0),
+    tempoMedio: Math.round(apontamentosFiltrados.reduce((acc, ap) => acc + ap.tempo_execucao, 0) / (apontamentosFiltrados.length || 1)),
     concluidos: apontamentosFiltrados.filter(ap => ap.status === "concluido").length,
     emAndamento: apontamentosFiltrados.filter(ap => ap.status === "em andamento").length
   };
@@ -136,86 +136,54 @@ export default function ApontamentosAdmin() {
     }
   };
 
-  const formatTempo = (minutos) => {
-    if (minutos < 60) return `${minutos} min`;
-    const horas = Math.floor(minutos / 60);
-    const mins = minutos % 60;
-    return `${horas}h ${mins}min`;
-  };
+  const formatTempo = (minutos) => minutos < 60 ? `${minutos} min` : `${Math.floor(minutos/60)}h ${minutos%60}min`;
 
-  const formatData = (dataString) => {
-    return new Date(dataString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+  const formatData = (dataString) => new Date(dataString).toLocaleDateString('pt-BR', { 
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+  });
 
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 md:p-10">
         <div className="max-w-7xl mx-auto space-y-6">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                Apontamentos dos Técnicos
-              </h1>
-              <p className="text-gray-600 dark:text-gray-300">
-                Acompanhe a produtividade e eficiência da equipe técnica
-              </p>
-            </div>
-          </div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Apontamentos dos Técnicos</h1>
+          <p className="text-gray-600 dark:text-gray-300">Acompanhe a produtividade e eficiência da equipe técnica</p>
 
           {/* Filtros */}
           <Card>
-            <CardContent className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Select value={tecnicoSelecionado} onValueChange={setTecnicoSelecionado}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filtrar por técnico" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos os técnicos</SelectItem>
-                    {mockTecnicos.map(tecnico => (
-                      <SelectItem key={tecnico.id} value={tecnico.nome}>
-                        {tecnico.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <CardContent className="p-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Select value={tecnicoSelecionado} onValueChange={setTecnicoSelecionado}>
+                <SelectTrigger><SelectValue placeholder="Filtrar por técnico" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os técnicos</SelectItem>
+                  {mockTecnicos.map(t => <SelectItem key={t.id} value={t.nome}>{t.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
 
-                <Select value={periodoSelecionado} onValueChange={setPeriodoSelecionado}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Período" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="7dias">Últimos 7 dias</SelectItem>
-                    <SelectItem value="30dias">Últimos 30 dias</SelectItem>
-                    <SelectItem value="90dias">Últimos 90 dias</SelectItem>
-                    <SelectItem value="1ano">Último ano</SelectItem>
-                  </SelectContent>
-                </Select>
+              <Select value={periodoSelecionado} onValueChange={setPeriodoSelecionado}>
+                <SelectTrigger><SelectValue placeholder="Período" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7dias">Últimos 7 dias</SelectItem>
+                  <SelectItem value="30dias">Últimos 30 dias</SelectItem>
+                  <SelectItem value="90dias">Últimos 90 dias</SelectItem>
+                  <SelectItem value="1ano">Último ano</SelectItem>
+                </SelectContent>
+              </Select>
 
-                <Select value={statusFiltro} onValueChange={setStatusFiltro}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos os status</SelectItem>
-                    <SelectItem value="concluido">Concluídos</SelectItem>
-                    <SelectItem value="em andamento">Em andamento</SelectItem>
-                    <SelectItem value="pendente">Pendentes</SelectItem>
-                  </SelectContent>
-                </Select>
+              <Select value={statusFiltro} onValueChange={setStatusFiltro}>
+                <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os status</SelectItem>
+                  <SelectItem value="concluido">Concluídos</SelectItem>
+                  <SelectItem value="em andamento">Em andamento</SelectItem>
+                  <SelectItem value="pendente">Pendentes</SelectItem>
+                </SelectContent>
+              </Select>
 
-                <div className="flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-lg px-4">
-                  <span className="text-sm text-gray-600 dark:text-gray-300">
-                    {apontamentosFiltrados.length} apontamento{apontamentosFiltrados.length !== 1 ? 's' : ''}
-                  </span>
-                </div>
+              <div className="flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-lg px-4">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
+                  {apontamentosFiltrados.length} apontamento{apontamentosFiltrados.length !== 1 ? 's' : ''}
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -223,56 +191,45 @@ export default function ApontamentosAdmin() {
           {/* Estatísticas */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Total Apontamentos</p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{estatisticas.totalApontamentos}</p>
-                  </div>
-                  <FileText className="h-8 w-8 text-blue-600" />
+              <CardContent className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Apontamentos</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{estatisticas.totalApontamentos}</p>
                 </div>
+                <FileText className="h-8 w-8 text-blue-600" />
               </CardContent>
             </Card>
-            
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Tempo Médio</p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{estatisticas.tempoMedio} min</p>
-                  </div>
-                  <Clock className="h-8 w-8 text-yellow-600" />
+              <CardContent className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Tempo Médio</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{estatisticas.tempoMedio} min</p>
                 </div>
+                <Clock className="h-8 w-8 text-yellow-600" />
               </CardContent>
             </Card>
-            
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Concluídos</p>
-                    <p className="text-2xl font-bold text-green-600">{estatisticas.concluidos}</p>
-                  </div>
-                  <CheckCircle className="h-8 w-8 text-green-600" />
+              <CardContent className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Concluídos</p>
+                  <p className="text-2xl font-bold text-green-600">{estatisticas.concluidos}</p>
                 </div>
+                <CheckCircle className="h-8 w-8 text-green-600" />
               </CardContent>
             </Card>
-            
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Em Andamento</p>
-                    <p className="text-2xl font-bold text-blue-600">{estatisticas.emAndamento}</p>
-                  </div>
-                  <AlertTriangle className="h-8 w-8 text-blue-600" />
+              <CardContent className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Em Andamento</p>
+                  <p className="text-2xl font-bold text-blue-600">{estatisticas.emAndamento}</p>
                 </div>
+                <AlertTriangle className="h-8 w-8 text-blue-600" />
               </CardContent>
             </Card>
           </div>
 
+          {/* Lista de Apontamentos */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Lista de Apontamentos */}
             <div className="lg:col-span-2 space-y-4">
               <Card>
                 <CardHeader>
@@ -281,94 +238,54 @@ export default function ApontamentosAdmin() {
                     Apontamentos Recentes
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {apontamentosFiltrados.map((apontamento) => (
-                      <div
-                        key={apontamento.id}
-                        className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                              {apontamento.titulo_chamado}
-                            </h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                              {apontamento.descricao}
-                            </p>
-                            <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-                              <span className="flex items-center gap-1">
-                                <Users className="h-3 w-3" />
-                                {apontamento.tecnico}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                {formatData(apontamento.data)}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex flex-col items-end gap-2">
-                            <Badge className={getStatusColor(apontamento.status)}>
-                              {apontamento.status}
-                            </Badge>
-                            <Badge className={getPrioridadeColor(apontamento.prioridade)}>
-                              {apontamento.prioridade}
-                            </Badge>
+                <CardContent className="space-y-4 max-h-[600px] overflow-y-auto">
+                  {apontamentosFiltrados.map(apont => (
+                    <div key={apont.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">{apont.titulo_chamado}</h3>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{apont.descricao}</p>
+                          <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                            <span className="flex items-center gap-1"><Users className="h-3 w-3" />{apont.tecnico}</span>
+                            <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{formatData(apont.data)}</span>
                           </div>
                         </div>
-                        
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">
-                            Chamado #{apontamento.chamado_id}
-                          </span>
-                          <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
-                            <Clock className="h-4 w-4" />
-                            {formatTempo(apontamento.tempo_execucao)}
-                          </span>
+                        <div className="flex flex-col items-end gap-2">
+                          <Badge className={getStatusColor(apont.status)}>{apont.status}</Badge>
+                          <Badge className={getPrioridadeColor(apont.prioridade)}>{apont.prioridade}</Badge>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600 dark:text-gray-400">Chamado #{apont.chamado_id}</span>
+                        <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400"><Clock className="h-4 w-4" />{formatTempo(apont.tempo_execucao)}</span>
+                      </div>
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
             </div>
 
-            {/* Gráficos e Métricas */}
+            {/* Performance Técnicos e Gráficos */}
             <div className="lg:col-span-1 space-y-4">
-              {/* Performance dos Técnicos */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5" />
-                    Performance dos Técnicos
-                  </CardTitle>
+                  <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5" />Performance dos Técnicos</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {mockTecnicos.map((tecnico) => (
-                      <div key={tecnico.id} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                    {mockTecnicos.map(t => (
+                      <div key={t.id} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm">
-                            {tecnico.nome}
-                          </h4>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
-                            {tecnico.total_chamados} chamados
-                          </span>
+                          <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm">{t.nome}</h4>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">{t.total_chamados} chamados</span>
                         </div>
-                        
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-gray-600 dark:text-gray-400">Tempo médio:</span>
-                            <span className="font-medium">{tecnico.tempo_medio} min</span>
-                          </div>
-                          
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-gray-600 dark:text-gray-400">Satisfação:</span>
-                            <span className="flex items-center gap-1">
-                              <span className="font-medium">{tecnico.satisfacao}</span>
-                              <span className="text-yellow-500">★</span>
-                            </span>
-                          </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-600 dark:text-gray-400">Tempo médio:</span>
+                          <span className="font-medium">{t.tempo_medio} min</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-600 dark:text-gray-400">Satisfação:</span>
+                          <span className="flex items-center gap-1"><span className="font-medium">{t.satisfacao}</span><span className="text-yellow-500">★</span></span>
                         </div>
                       </div>
                     ))}
@@ -376,35 +293,29 @@ export default function ApontamentosAdmin() {
                 </CardContent>
               </Card>
 
-              {/* Gráfico de Tempo por Status */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5" />
-                    Tempo por Status
-                  </CardTitle>
+                  <CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5" />Tempo por Status</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Concluídos</span>
-                      <span className="text-sm font-medium">52 min</span>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600 dark:text-gray-400">Concluídos</span>
+                      <span className="font-medium">52 min</span>
                     </div>
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                       <div className="bg-green-600 h-2 rounded-full" style={{ width: '65%' }}></div>
                     </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Em andamento</span>
-                      <span className="text-sm font-medium">61 min</span>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600 dark:text-gray-400">Em andamento</span>
+                      <span className="font-medium">61 min</span>
                     </div>
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                       <div className="bg-blue-600 h-2 rounded-full" style={{ width: '45%' }}></div>
                     </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Pendentes</span>
-                      <span className="text-sm font-medium">0 min</span>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600 dark:text-gray-400">Pendentes</span>
+                      <span className="font-medium">0 min</span>
                     </div>
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                       <div className="bg-yellow-600 h-2 rounded-full" style={{ width: '0%' }}></div>
@@ -414,6 +325,7 @@ export default function ApontamentosAdmin() {
               </Card>
             </div>
           </div>
+
         </div>
       </div>
     </DashboardLayout>

@@ -11,7 +11,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { 
   FileText, 
   Search, 
-  Eye,
   Clock,
   CheckCircle,
   AlertTriangle,
@@ -19,7 +18,6 @@ import {
   User,
   Calendar,
   MessageSquare,
-  Save,
   Wrench
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout/DashboardLayout";
@@ -46,6 +44,11 @@ export default function VizualizarChamados() {
       const response = await apiRequest(`/api/chamados?tecnico_id=${user?.id}`);
       const data = Array.isArray(response) ? response : response?.data;
       setChamados(data || []);
+      // Se houver um chamado selecionado, atualiza ele também
+      if (selectedChamado) {
+        const updated = data.find(c => c.id === selectedChamado.id);
+        if (updated) setSelectedChamado(updated);
+      }
     } catch (error) {
       console.error("Erro ao carregar chamados:", error);
     } finally {
@@ -56,18 +59,19 @@ export default function VizualizarChamados() {
   const handleStatusUpdate = async (chamadoId, novoStatus) => {
     setUpdatingStatus(true);
     try {
-      const response = await apiRequest(`/api/chamados/${chamadoId}`, {
+      await apiRequest(`/api/chamados/${chamadoId}`, {
         method: "PUT",
-        body: JSON.stringify({
-          status: novoStatus
-        })
+        body: JSON.stringify({ status: novoStatus })
       });
-      
-      if (response.success) {
-        fetchChamados();
-        if (selectedChamado?.id === chamadoId) {
-          setSelectedChamado({ ...selectedChamado, status: novoStatus });
-        }
+
+      // Atualiza o array de chamados localmente
+      setChamados(prev =>
+        prev.map(c => c.id === chamadoId ? { ...c, status: novoStatus } : c)
+      );
+
+      // Atualiza selectedChamado se estiver aberto
+      if (selectedChamado?.id === chamadoId) {
+        setSelectedChamado(prev => ({ ...prev, status: novoStatus }));
       }
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
@@ -80,18 +84,33 @@ export default function VizualizarChamados() {
     if (!apontamento.trim() || !selectedChamado) return;
 
     try {
-      const response = await apiRequest("/api/apontamentos", {
+      const novoApont = {
+        chamado_id: selectedChamado.id,
+        tecnico_id: user?.id,
+        descricao: apontamento,
+        comeco: new Date().toISOString()
+      };
+
+      await apiRequest("/api/apontamentos", {
         method: "POST",
-        body: JSON.stringify({
-          chamado_id: selectedChamado.id,
-          tecnico_id: user?.id,
-          descricao: apontamento
-        })
+        body: JSON.stringify(novoApont)
       });
 
       setApontamento("");
-      fetchChamados();
-      // Atualizar o chamado selecionado (se necessário buscar apontamentos, ajustar backend depois)
+
+      // Atualiza apontamentos no array local sem precisar refazer todo fetch
+      setChamados(prev =>
+        prev.map(c =>
+          c.id === selectedChamado.id
+            ? { ...c, apontamentos: [...(c.apontamentos || []), novoApont] }
+            : c
+        )
+      );
+
+      setSelectedChamado(prev => ({
+        ...prev,
+        apontamentos: [...(prev.apontamentos || []), novoApont]
+      }));
     } catch (error) {
       console.error("Erro ao adicionar apontamento:", error);
     }
@@ -140,7 +159,8 @@ export default function VizualizarChamados() {
     total: chamados.length,
     pendentes: chamados.filter(c => c.status === "pendente").length,
     emAndamento: chamados.filter(c => c.status === "em andamento").length,
-    concluidos: chamados.filter(c => c.status === "concluido").length
+    concluidos: chamados.filter(c => c.status === "concluido").length,
+    cancelados: chamados.filter(c => c.status === "cancelado").length
   };
 
   if (loading) {
@@ -157,7 +177,6 @@ export default function VizualizarChamados() {
     <DashboardLayout>
       <div className="min-h-screen bg-gray-50 p-6 md:p-10">
         <div className="max-w-7xl mx-auto space-y-6">
-          {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Visualizar Chamados</h1>
@@ -165,104 +184,94 @@ export default function VizualizarChamados() {
             </div>
           </div>
 
-          {/* Estatísticas */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Total</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-                  </div>
-                  <FileText className="h-8 w-8 text-blue-600" />
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Total</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
                 </div>
+                <FileText className="h-8 w-8 text-blue-600" />
               </CardContent>
             </Card>
-            
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Pendentes</p>
-                    <p className="text-2xl font-bold text-yellow-600">{stats.pendentes}</p>
-                  </div>
-                  <Clock className="h-8 w-8 text-yellow-600" />
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Pendentes</p>
+                  <p className="text-2xl font-bold text-yellow-600">{stats.pendentes}</p>
                 </div>
+                <Clock className="h-8 w-8 text-yellow-600" />
               </CardContent>
             </Card>
-            
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Em Andamento</p>
-                    <p className="text-2xl font-bold text-blue-600">{stats.emAndamento}</p>
-                  </div>
-                  <AlertTriangle className="h-8 w-8 text-blue-600" />
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Em Andamento</p>
+                  <p className="text-2xl font-bold text-blue-600">{stats.emAndamento}</p>
                 </div>
+                <AlertTriangle className="h-8 w-8 text-blue-600" />
               </CardContent>
             </Card>
-            
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Concluídos</p>
-                    <p className="text-2xl font-bold text-green-600">{stats.concluidos}</p>
-                  </div>
-                  <CheckCircle className="h-8 w-8 text-green-600" />
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Concluídos</p>
+                  <p className="text-2xl font-bold text-green-600">{stats.concluidos}</p>
                 </div>
+                <CheckCircle className="h-8 w-8 text-green-600" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Cancelados</p>
+                  <p className="text-2xl font-bold text-red-600">{stats.cancelados}</p>
+                </div>
+                <XCircle className="h-8 w-8 text-red-600" />
               </CardContent>
             </Card>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Lista de Chamados */}
             <div className="lg:col-span-2 space-y-4">
-              {/* Filtros */}
               <Card>
-                <CardContent className="p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        placeholder="Buscar chamados..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
+                <CardContent className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Buscar chamados..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
 
-                    <Select value={filterStatus} onValueChange={setFilterStatus}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Filtrar por status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="todos">Todos os status</SelectItem>
-                        <SelectItem value="pendente">Pendentes</SelectItem>
-                        <SelectItem value="em andamento">Em Andamento</SelectItem>
-                        <SelectItem value="concluido">Concluídos</SelectItem>
-                        <SelectItem value="cancelado">Cancelados</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Filtrar por status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todos">Todos os status</SelectItem>
+                      <SelectItem value="pendente">Pendentes</SelectItem>
+                      <SelectItem value="em andamento">Em Andamento</SelectItem>
+                      <SelectItem value="concluido">Concluídos</SelectItem>
+                      <SelectItem value="cancelado">Cancelados</SelectItem>
+                    </SelectContent>
+                  </Select>
 
-                    <div className="flex items-center justify-center bg-gray-100 rounded-lg px-4">
-                      <span className="text-sm text-gray-600">
-                        {filteredChamados.length} chamado{filteredChamados.length !== 1 ? 's' : ''}
-                      </span>
-                    </div>
+                  <div className="flex items-center justify-center bg-gray-100 rounded-lg px-4">
+                    <span className="text-sm text-gray-600">
+                      {filteredChamados.length} chamado{filteredChamados.length !== 1 ? 's' : ''}
+                    </span>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Lista */}
               <div className="space-y-3">
                 {filteredChamados.map((chamado) => (
                   <Card 
                     key={chamado.id}
-                    className={`cursor-pointer transition-all hover:shadow-md ${
-                      selectedChamado?.id === chamado.id ? 'ring-2 ring-blue-500' : ''
-                    }`}
+                    className={`cursor-pointer transition-all hover:shadow-md ${selectedChamado?.id === chamado.id ? 'ring-2 ring-blue-500' : ''}`}
                     onClick={() => setSelectedChamado(chamado)}
                   >
                     <CardContent className="p-4">
@@ -286,7 +295,6 @@ export default function VizualizarChamados() {
                             {getStatusIcon(chamado.status)}
                             {getStatusLabel(chamado.status)}
                           </Badge>
-                          {/* prioridade removida do banco */}
                         </div>
                       </div>
                     </CardContent>
@@ -295,7 +303,6 @@ export default function VizualizarChamados() {
               </div>
             </div>
 
-            {/* Detalhes do Chamado */}
             <div className="lg:col-span-1">
               {selectedChamado ? (
                 <Card className="sticky top-6">
@@ -309,7 +316,6 @@ export default function VizualizarChamados() {
                     <div>
                       <h3 className="font-semibold text-gray-900 mb-2">{selectedChamado.titulo}</h3>
                       <p className="text-sm text-gray-600 mb-4">{selectedChamado.descricao}</p>
-                      
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-500">Solicitante:</span>
@@ -319,11 +325,9 @@ export default function VizualizarChamados() {
                           <span className="text-gray-500">Data:</span>
                           <span>{new Date(selectedChamado.criado_em).toLocaleDateString('pt-BR')}</span>
                         </div>
-                        {/* prioridade removida */}
                       </div>
                     </div>
 
-                    {/* Atualizar Status */}
                     <div>
                       <h4 className="font-medium text-gray-900 mb-2">Atualizar Status</h4>
                       <Select 
@@ -343,7 +347,6 @@ export default function VizualizarChamados() {
                       </Select>
                     </div>
 
-                    {/* Apontamentos */}
                     <div>
                       <h4 className="font-medium text-gray-900 mb-2">Adicionar Apontamento</h4>
                       <Textarea
@@ -364,7 +367,6 @@ export default function VizualizarChamados() {
                       </Button>
                     </div>
 
-                    {/* Lista de Apontamentos */}
                     {selectedChamado.apontamentos && selectedChamado.apontamentos.length > 0 && (
                       <div>
                         <h4 className="font-medium text-gray-900 mb-2">Apontamentos</h4>
@@ -373,13 +375,14 @@ export default function VizualizarChamados() {
                             <div key={index} className="p-2 bg-gray-50 rounded text-sm">
                               <p className="text-gray-700">{apont.descricao}</p>
                               <p className="text-xs text-gray-500 mt-1">
-                                {new Date(apont.data).toLocaleString('pt-BR')}
+                                {new Date(apont.comeco || apont.data).toLocaleString('pt-BR')}
                               </p>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
+
                   </CardContent>
                 </Card>
               ) : (

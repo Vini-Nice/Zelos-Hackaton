@@ -30,9 +30,9 @@ const usuarioController = {
       }
       
       // Validar função
-      const funcoesValidas = ['admin', 'tecnico', 'aluno'];
+      const funcoesValidas = ['admin', 'tecnico', 'usuario_comum'];
       if (!funcoesValidas.includes(funcao)) {
-        return res.status(400).json({ erro: 'Função deve ser: admin, tecnico ou aluno' });
+        return res.status(400).json({ erro: 'Função deve ser: admin, tecnico ou usuario_comum' });
       }
       
       const usuarioData = { nome, email, senha, funcao, status: status || 'ativo' };
@@ -52,9 +52,9 @@ const usuarioController = {
       if (email) usuarioData.email = email;
       if (senha) usuarioData.senha = senha;
       if (funcao) {
-        const funcoesValidas = ['admin', 'tecnico', 'aluno'];
+        const funcoesValidas = ['admin', 'tecnico', 'usuario_comum'];
         if (!funcoesValidas.includes(funcao)) {
-          return res.status(400).json({ erro: 'Função deve ser: admin, tecnico ou aluno' });
+          return res.status(400).json({ erro: 'Função deve ser: admin, tecnico ou usuario_comum' });
         }
         usuarioData.funcao = funcao;
       }
@@ -97,12 +97,10 @@ const usuarioController = {
         return res.status(404).json({ erro: 'Usuário não encontrado' });
       }
 
-      // Verificar se o usuário está ativo
       if (usuario.status === 'inativo') {
         return res.status(401).json({ erro: 'Usuário inativo' });
       }
 
-      // Comparação de senha usando hash
       const senhaCorreta = await compararSenha(senha, usuario.senha);
       if (!senhaCorreta) {
         return res.status(401).json({ erro: 'Senha incorreta' });
@@ -124,7 +122,6 @@ const usuarioController = {
     }
   },
 
-  // Listar apenas técnicos
   async listarTecnicos(req, res) {
     try {
       const usuarios = await listarUsuarios();
@@ -135,14 +132,13 @@ const usuarioController = {
     }
   },
 
-  // Listar apenas alunos
-  async listarAlunos(req, res) {
+  async listarUsuariosComuns(req, res) {
     try {
       const usuarios = await listarUsuarios();
-      const alunos = usuarios.filter(u => u.funcao === 'aluno' && u.status === 'ativo');
-      res.status(200).json(alunos);
+      const usuariosComuns = usuarios.filter(u => u.funcao === 'usuario_comum' && u.status === 'ativo');
+      res.status(200).json(usuariosComuns);
     } catch (error) {
-      res.status(500).json({ erro: 'Erro ao listar alunos' });
+      res.status(500).json({ erro: 'Erro ao listar usuários comuns' });
     }
   }
 };

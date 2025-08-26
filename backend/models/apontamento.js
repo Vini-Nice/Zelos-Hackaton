@@ -45,4 +45,14 @@ const excluirApontamento = async (id) => {
   }
 };
 
-export { listarApontamentos, obterApontamentoPorId, criarApontamento, atualizarApontamento, excluirApontamento };
+const listarApontamentosPorUsuario = async (usuarioId) => {
+  try {
+    return await readAll('apontamentos', `tecnico_id = ${usuarioId}`);
+  } catch (error) {
+    console.error('Erro ao listar apontamentos por usuário:', error);
+    throw error;
+  }
+};
+
+
+export { listarApontamentos, obterApontamentoPorId, criarApontamento, atualizarApontamento, excluirApontamento, listarApontamentosPorUsuario };

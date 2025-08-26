@@ -72,4 +72,6 @@ const apontamentoController = {
   }
 };
 
+
+
 export default apontamentoController;

@@ -41,7 +41,7 @@ export default function Integrantes() {
     nome: "",
     email: "",
     senha: "",
-    funcao: "aluno",
+    funcao: "usuario_comum",
     status: "ativo",
   });
 
@@ -71,7 +71,7 @@ export default function Integrantes() {
         method: "POST",
         body: JSON.stringify(formData),
       });
-      setFormData({ nome: "", email: "", senha: "", funcao: "aluno", status: "ativo" });
+      setFormData({ nome: "", email: "", senha: "", funcao: "usuario_comum", status: "ativo" });
       fetchUsuarios();
     } catch (error) {
       console.error("Erro ao criar usuário:", error);
@@ -178,7 +178,7 @@ export default function Integrantes() {
                   nome: "",
                   email: "",
                   senha: "",
-                  funcao: "aluno",
+                  funcao: "usuario_comum",
                   status: "ativo",
                 })
               }
