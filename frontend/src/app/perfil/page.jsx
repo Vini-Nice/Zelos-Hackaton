@@ -199,14 +199,7 @@ export default function Perfil() {
                             <p className="font-medium text-gray-900 dark:text-gray-100">
                               {showPassword ? "••••••••" : "••••••••"}
                             </p>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="h-6 w-6 p-0"
-                            >
-                              {showPassword ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                            </Button>
+                           
                           </div>
                         </div>
                         
