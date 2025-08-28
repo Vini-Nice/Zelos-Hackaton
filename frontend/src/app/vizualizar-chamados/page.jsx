@@ -29,26 +29,30 @@ export default function VizualizarChamados() {
   const { user } = useAuth();
   const [chamados, setChamados] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("todos");
   const [selectedChamado, setSelectedChamado] = useState(null);
   const [apontamento, setApontamento] = useState("");
 
   useEffect(() => {
-    fetchChamados();
-  }, []);
+    if (user?.id) fetchChamados();
+  }, [user]);
 
   const fetchChamados = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const response = await apiRequest(`/api/chamados?tecnico_id=${user?.id}`);
+      const response = await apiRequest(`/api/chamados?tecnico_id=${user.id}`);
       const data = Array.isArray(response) ? response : response?.data;
       setChamados(data || []);
       if (selectedChamado) {
         const updated = data.find(c => c.id === selectedChamado.id);
         if (updated) setSelectedChamado(updated);
       }
-    } catch (error) {
-      console.error("Erro ao carregar chamados:", error);
+    } catch (err) {
+      console.error("Erro ao carregar chamados:", err);
+      setError("Não foi possível carregar os chamados. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -57,12 +61,14 @@ export default function VizualizarChamados() {
   const handleAddApontamento = async () => {
     if (!apontamento.trim() || !selectedChamado) return;
 
+    const comeco = new Date().toISOString();
+
     try {
       const novoApont = {
         chamado_id: selectedChamado.id,
-        tecnico_id: user?.id,
+        tecnico_id: user.id,
         descricao: apontamento,
-        comeco: new Date().toISOString()
+        comeco
       };
 
       await apiRequest("/api/apontamentos", {
@@ -84,8 +90,39 @@ export default function VizualizarChamados() {
         ...prev,
         apontamentos: [...(prev.apontamentos || []), novoApont]
       }));
-    } catch (error) {
-      console.error("Erro ao adicionar apontamento:", error);
+    } catch (err) {
+      console.error("Erro ao adicionar apontamento:", err);
+      setError("Não foi possível adicionar o apontamento.");
+    }
+  };
+
+  const handleFinalizarChamado = async () => {
+    if (!selectedChamado || !selectedChamado.apontamentos?.length) return;
+
+    let duracaoTotal = 0;
+    selectedChamado.apontamentos.forEach((apont) => {
+      const inicio = new Date(apont.comeco).getTime();
+      const fim = apont.fim ? new Date(apont.fim).getTime() : Date.now();
+      duracaoTotal += Math.floor((fim - inicio) / 1000);
+    });
+
+    try {
+      await apiRequest(`/api/chamados/${selectedChamado.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          status: "concluido",
+          duracao_total: duracaoTotal
+        })
+      });
+
+      const updatedChamados = chamados.map(c =>
+        c.id === selectedChamado.id ? { ...c, status: "concluido", duracao_total: duracaoTotal } : c
+      );
+      setChamados(updatedChamados);
+      setSelectedChamado(prev => ({ ...prev, status: "concluido", duracao_total: duracaoTotal }));
+    } catch (err) {
+      console.error("Erro ao finalizar chamado:", err);
+      setError("Não foi possível finalizar o chamado.");
     }
   };
 
@@ -122,18 +159,15 @@ export default function VizualizarChamados() {
   const filteredChamados = chamados.filter(chamado => {
     const matchesSearch = chamado.titulo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          chamado.descricao?.toLowerCase().includes(searchTerm.toLowerCase());
-    
     const matchesStatus = filterStatus === "todos" || chamado.status === filterStatus;
-    
     return matchesSearch && matchesStatus;
   });
 
-  const stats = {
-    total: chamados.length,
-    pendentes: chamados.filter(c => c.status === "pendente").length,
-    emAndamento: chamados.filter(c => c.status === "em andamento").length,
-    concluidos: chamados.filter(c => c.status === "concluido").length,
-    cancelados: chamados.filter(c => c.status === "cancelado").length
+  const formatDuracao = (segundos) => {
+    const h = Math.floor(segundos / 3600);
+    const m = Math.floor((segundos % 3600) / 60);
+    const s = segundos % 60;
+    return `${h}h ${m}m ${s}s`;
   };
 
   if (loading) {
@@ -141,6 +175,16 @@ export default function VizualizarChamados() {
       <DashboardLayout>
         <div className="min-h-screen bg-gray-50 p-6 md:p-10 flex items-center justify-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="min-h-screen flex items-center justify-center text-red-500 font-bold">
+          {error}
         </div>
       </DashboardLayout>
     );
@@ -159,7 +203,36 @@ export default function VizualizarChamados() {
 
           {/* Cards de estatísticas */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            {/* ... mesmos cards de estatísticas ... */}
+            <Card className="p-4">
+              <CardContent className="text-center">
+                <h3 className="text-lg font-semibold">Total</h3>
+                <p className="text-2xl font-bold">{chamados.length}</p>
+              </CardContent>
+            </Card>
+            <Card className="p-4">
+              <CardContent className="text-center">
+                <h3 className="text-lg font-semibold">Pendentes</h3>
+                <p className="text-2xl font-bold">{chamados.filter(c => c.status === "pendente").length}</p>
+              </CardContent>
+            </Card>
+            <Card className="p-4">
+              <CardContent className="text-center">
+                <h3 className="text-lg font-semibold">Em Andamento</h3>
+                <p className="text-2xl font-bold">{chamados.filter(c => c.status === "em andamento").length}</p>
+              </CardContent>
+            </Card>
+            <Card className="p-4">
+              <CardContent className="text-center">
+                <h3 className="text-lg font-semibold">Concluídos</h3>
+                <p className="text-2xl font-bold">{chamados.filter(c => c.status === "concluido").length}</p>
+              </CardContent>
+            </Card>
+            <Card className="p-4">
+              <CardContent className="text-center">
+                <h3 className="text-lg font-semibold">Cancelados</h3>
+                <p className="text-2xl font-bold">{chamados.filter(c => c.status === "cancelado").length}</p>
+              </CardContent>
+            </Card>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -249,16 +322,6 @@ export default function VizualizarChamados() {
                     <div>
                       <h3 className="font-semibold text-gray-900 mb-2">{selectedChamado.titulo}</h3>
                       <p className="text-sm text-gray-600 mb-4">{selectedChamado.descricao}</p>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Solicitante:</span>
-                          <span className="font-medium">Usuário #{selectedChamado.usuario_id}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Data:</span>
-                          <span>{new Date(selectedChamado.criado_em).toLocaleDateString('pt-BR')}</span>
-                        </div>
-                      </div>
                     </div>
 
                     {/* Campo para adicionar apontamento */}
@@ -274,7 +337,7 @@ export default function VizualizarChamados() {
                       <Button
                         onClick={handleAddApontamento}
                         disabled={!apontamento.trim()}
-                        className="w-full"
+                        className="w-full mb-2"
                         size="sm"
                       >
                         <MessageSquare className="h-4 w-4 mr-2" />
@@ -291,11 +354,29 @@ export default function VizualizarChamados() {
                             <div key={index} className="p-2 bg-gray-50 rounded text-sm">
                               <p className="text-gray-700">{apont.descricao}</p>
                               <p className="text-xs text-gray-500 mt-1">
-                                {new Date(apont.comeco || apont.data).toLocaleString('pt-BR')}
+                                {new Date(apont.comeco).toLocaleString('pt-BR')}
                               </p>
                             </div>
                           ))}
                         </div>
+                      </div>
+                    )}
+
+                    {/* Botão Finalizar */}
+                    {selectedChamado.status !== "concluido" && (
+                      <Button
+                        onClick={handleFinalizarChamado}
+                        className="w-full mt-4"
+                        size="sm"
+                      >
+                        Finalizar Chamado
+                      </Button>
+                    )}
+
+                    {/* Mostrar duração total se finalizado */}
+                    {selectedChamado.status === "concluido" && selectedChamado.duracao_total && (
+                      <div className="mt-2 text-sm text-gray-600">
+                        Duração total do serviço: {formatDuracao(selectedChamado.duracao_total)}
                       </div>
                     )}
                   </CardContent>
