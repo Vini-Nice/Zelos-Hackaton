@@ -165,7 +165,8 @@ export default function MeusChamadosPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {filteredChamados.map((chamado) => {
-                      const StatusIcon = statusIcons[chamado.status];
+                      const StatusIcon = statusIcons[chamado.status] || FileText;
+
                       return (
                         <tr key={chamado.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4">
