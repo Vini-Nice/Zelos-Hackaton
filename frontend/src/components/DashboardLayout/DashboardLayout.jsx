@@ -19,9 +19,7 @@ export default function DashboardLayout({ children }) {
       <Header/>
       <div className="flex">
         <ZelosDashboard onToggle={handleSidebarToggle} />
-        <main className={`flex-1 transition-all duration-300 ${
-          sidebarCollapsed ? 'ml-16' : 'ml-64'
-        } lg:ml-64`}>
+        <main className={`flex-1`}>
           <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             {children}
           </div>

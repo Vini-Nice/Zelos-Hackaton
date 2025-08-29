@@ -2,28 +2,111 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import {
-  FileText,
-  Clock,
-  CheckCircle,
-  TrendingUp,
-  Users,
-  ArrowRight
-} from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import DashboardLayout from "@/components/DashboardLayout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Wrench,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  FileText,
+  Users,
+  Settings,
+  BarChart3,
+  Plus,
+  Search,
+  Bell,
+} from "lucide-react";
 import { apiRequest } from "@/lib/auth";
+import Link from "next/link";
 
-export default function DashboardAdmin() {
+export default function MaintenanceDashboard() {
   const router = useRouter();
   const [stats, setStats] = useState({
     totalChamados: 0,
     chamadosPendentes: 0,
     chamadosResolvidos: 0,
-    usuariosAtivos: 0
+    usuariosAtivos: 0,
   });
   const [recentChamados, setRecentChamados] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const quickActions = [
+    {
+      title: "Nova Solicitação",
+      description: "Criar nova ordem de manutenção",
+      icon: Plus,
+      href: "/requests/new",
+      color: "bg-primary hover:bg-primary/90",
+      urgent: false,
+    },
+    {
+      title: "Ordens Pendentes",
+      description: "12 ordens aguardando aprovação",
+      icon: Clock,
+      href: "/orders/pending",
+      color: "bg-accent hover:bg-accent/90",
+      urgent: true,
+      count: 12,
+    },
+    {
+      title: "Manutenções Urgentes",
+      description: "3 equipamentos precisam de atenção",
+      icon: AlertTriangle,
+      href: "/maintenance/urgent",
+      color: "bg-destructive hover:bg-destructive/90",
+      urgent: true,
+      count: 3,
+    },
+    {
+      title: "Relatórios",
+      description: "Visualizar relatórios e métricas",
+      icon: BarChart3,
+      href: "/reports",
+      color: "bg-secondary hover:bg-secondary/90",
+      urgent: false,
+    },
+  ];
+
+  const systemModules = [
+    {
+      title: "Equipamentos",
+      description: "Gerenciar inventário de equipamentos",
+      icon: Wrench,
+      href: "/equipment",
+      stats: "248 ativos",
+    },
+    {
+      title: "Técnicos",
+      description: "Gerenciar equipe de manutenção",
+      icon: Users,
+      href: "/technicians",
+      stats: "15 técnicos",
+    },
+    {
+      title: "Ordens de Serviço",
+      description: "Acompanhar todas as ordens",
+      icon: FileText,
+      href: "/work-orders",
+      stats: "45 abertas",
+    },
+    {
+      title: "Configurações",
+      description: "Configurar sistema e preferências",
+      icon: Settings,
+      href: "/settings",
+      stats: "Sistema",
+    },
+  ];
+
+  const recentActivity = [
+    { id: 1, action: "Ordem #1234 concluída", time: "2 min atrás", status: "success" },
+    { id: 2, action: "Equipamento EQ-001 em manutenção", time: "15 min atrás", status: "warning" },
+    { id: 3, action: "Nova solicitação recebida", time: "1 hora atrás", status: "info" },
+    { id: 4, action: "Técnico João Silva disponível", time: "2 horas atrás", status: "success" },
+  ];
 
   useEffect(() => {
     fetchDashboardData();
@@ -31,10 +114,9 @@ export default function DashboardAdmin() {
 
   const fetchDashboardData = async () => {
     try {
-      // Aqui você pode usar apenas o endpoint se apiRequest já tiver baseURL
       const [chamados, usuarios] = await Promise.all([
         apiRequest("/api/chamados"),
-        apiRequest("/api/usuarios")
+        apiRequest("/api/usuarios"),
       ]);
 
       const chamadosArray = Array.isArray(chamados) ? chamados : [];
@@ -42,9 +124,11 @@ export default function DashboardAdmin() {
 
       setStats({
         totalChamados: chamadosArray.length,
-        chamadosPendentes: chamadosArray.filter(c => (c.status || "").toLowerCase() === "pendente").length,
-        chamadosResolvidos: chamadosArray.filter(c => (c.status || "").toLowerCase() === "concluido" || (c.status || "").toLowerCase() === "concluído").length,
-        usuariosAtivos: usuariosArray.filter(u => (u.status || "").toLowerCase() === "ativo").length
+        chamadosPendentes: chamadosArray.filter((c) => (c.status || "").toLowerCase() === "pendente").length,
+        chamadosResolvidos: chamadosArray.filter((c) =>
+          ["concluido", "concluído"].includes((c.status || "").toLowerCase())
+        ).length,
+        usuariosAtivos: usuariosArray.filter((u) => (u.status || "").toLowerCase() === "ativo").length,
       });
 
       setRecentChamados(chamadosArray.slice(0, 5));
@@ -57,33 +141,47 @@ export default function DashboardAdmin() {
 
   const getStatusColor = (status) => {
     switch ((status || "").toLowerCase()) {
-      case "pendente": return "bg-yellow-100 text-yellow-800";
-      case "em andamento": return "bg-blue-100 text-blue-800";
+      case "pendente":
+        return "bg-yellow-100 text-yellow-800";
+      case "em andamento":
+        return "bg-blue-100 text-blue-800";
       case "concluido":
-      case "concluído": return "bg-green-100 text-green-800";
-      case "cancelado": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "concluído":
+        return "bg-green-100 text-green-800";
+      case "cancelado":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getPrioridadeColor = (prioridade) => {
     switch ((prioridade || "").toLowerCase()) {
-      case "alta": return "bg-red-100 text-red-800";
+      case "alta":
+        return "bg-red-100 text-red-800";
       case "média":
-      case "media": return "bg-yellow-100 text-yellow-800";
-      case "baixa": return "bg-green-100 text-green-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "media":
+        return "bg-yellow-100 text-yellow-800";
+      case "baixa":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusLabel = (status) => {
     switch ((status || "").toLowerCase()) {
-      case "pendente": return "Pendente";
-      case "em andamento": return "Em Andamento";
+      case "pendente":
+        return "Pendente";
+      case "em andamento":
+        return "Em Andamento";
       case "concluido":
-      case "concluído": return "Concluído";
-      case "cancelado": return "Cancelado";
-      default: return status;
+      case "concluído":
+        return "Concluído";
+      case "cancelado":
+        return "Cancelado";
+      default:
+        return status;
     }
   };
 
@@ -99,102 +197,158 @@ export default function DashboardAdmin() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gray-50 p-6 md:p-10">
-        <div className="max-w-7xl mx-auto space-y-8">
-
-          {/* Cabeçalho */}
-          <div className="bg-white rounded-2xl shadow-md p-6 flex flex-col md:flex-row justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Painel Administrativo</h1>
-              <p className="text-gray-600">Visão geral completa do sistema de chamados</p>
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <header className="border-b border-border bg-card">
+          <div className="flex h-16 items-center justify-between px-6">
+            <div className="flex items-center space-x-2">
+              <Wrench className="h-8 w-8 text-primary" />
+              <h1 className="text-xl font-bold text-foreground">Sistema de Manutenção</h1>
             </div>
-            <TrendingUp className="h-12 w-12 text-green-500 hidden md:block" />
-          </div>
-
-          {/* Estatísticas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white rounded-2xl shadow-md border p-6 flex items-center hover:shadow-lg transition">
-              <div className="p-3 rounded-lg bg-blue-100 text-blue-600">
-                <FileText className="h-7 w-7" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total de Chamados</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalChamados}</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-md border p-6 flex items-center hover:shadow-lg transition">
-              <div className="p-3 rounded-lg bg-yellow-100 text-yellow-600">
-                <Clock className="h-7 w-7" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Em Aberto</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.chamadosPendentes}</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-md border p-6 flex items-center hover:shadow-lg transition">
-              <div className="p-3 rounded-lg bg-green-100 text-green-600">
-                <CheckCircle className="h-7 w-7" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Resolvidos</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.chamadosResolvidos}</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-md border p-6 flex items-center hover:shadow-lg transition">
-              <div className="p-3 rounded-lg bg-purple-100 text-purple-600">
-                <Users className="h-7 w-7" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Usuários Ativos</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.usuariosAtivos}</p>
-              </div>
+            <div className="flex items-center space-x-4">
+              <Button variant="outline" size="sm">
+                <Search className="h-4 w-4 mr-2" />
+                Buscar
+              </Button>
+              <Button variant="outline" size="sm">
+                <Bell className="h-4 w-4" />
+              </Button>
             </div>
           </div>
+        </header>
 
-          {/* Chamados Recentes */}
-          <div className="bg-white rounded-2xl shadow-md border p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">Chamados Recentes</h2>
-              <Link href="/chamados-usuarios" className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1">
-                Ver todos <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-            <div className="space-y-4">
-              {recentChamados.length > 0 ? (
-                recentChamados.map((chamado) => chamado.id ? (
-                  <div key={chamado.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-2 h-2 rounded-full ${
-                        (chamado.prioridade || "").toLowerCase() === "alta" ? "bg-red-500" :
-                        (chamado.prioridade || "").toLowerCase() === "media" || (chamado.prioridade || "").toLowerCase() === "média" ? "bg-yellow-500" : "bg-blue-500"
-                      }`}></div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{chamado.titulo}</p>
-                        <p className="text-xs text-gray-500">{chamado.usuario_nome} • {new Date(chamado.criado_em).toLocaleDateString('pt-BR')}</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <span className={`text-xs px-2 py-1 rounded-full ${getPrioridadeColor(chamado.prioridade)}`}>
-                        {chamado.prioridade}
-                      </span>
-                      <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(chamado.status)}`}>
-                        {getStatusLabel(chamado.status)}
-                      </span>
-                    </div>
+        <div className="p-6 space-y-6">
+          {/* Status Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Equipamentos Ativos</p>
+                    <p className="text-2xl font-bold text-foreground">{stats.totalChamados}</p>
                   </div>
-                ) : null)
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>Nenhum chamado encontrado</p>
+                  <CheckCircle className="h-8 w-8 text-accent" />
                 </div>
-              )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Ordens Abertas</p>
+                    <p className="text-2xl font-bold text-foreground">{stats.chamadosPendentes}</p>
+                  </div>
+                  <Clock className="h-8 w-8 text-primary" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Manutenções Urgentes</p>
+                    <p className="text-2xl font-bold text-destructive">3</p>
+                  </div>
+                  <AlertTriangle className="h-8 w-8 text-destructive" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Técnicos Disponíveis</p>
+                    <p className="text-2xl font-bold text-foreground">{stats.usuariosAtivos}</p>
+                  </div>
+                  <Users className="h-8 w-8 text-accent" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quick Actions */}
+          <div>
+            <h2 className="text-lg font-semibold text-foreground mb-4">Ações Rápidas</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {quickActions.map((action, index) => (
+                <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer">
+                  <CardContent className="p-4">
+                    <Link href={action.href} className="block">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className={`p-2 rounded-lg ${action.color}`}>
+                          <action.icon className="h-5 w-5 text-white" />
+                        </div>
+                        {action.urgent && action.count && (
+                          <Badge variant="destructive" className="text-xs">
+                            {action.count}
+                          </Badge>
+                        )}
+                      </div>
+                      <h3 className="font-semibold text-foreground mb-1">{action.title}</h3>
+                      <p className="text-sm text-muted-foreground">{action.description}</p>
+                    </Link>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
 
+          {/* System Modules and Recent Activity */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <h2 className="text-lg font-semibold text-foreground mb-4">Módulos do Sistema</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {systemModules.map((module, index) => (
+                  <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <module.icon className="h-6 w-6 text-primary" />
+                        <Badge variant="secondary" className="text-xs">
+                          {module.stats}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <Link href={module.href} className="block">
+                        <CardTitle className="text-base mb-2">{module.title}</CardTitle>
+                        <CardDescription className="text-sm">{module.description}</CardDescription>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-lg font-semibold text-foreground mb-4">Atividade Recente</h2>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="space-y-4">
+                    {recentActivity.map((activity) => (
+                      <div key={activity.id} className="flex items-start space-x-3">
+                        <div
+                          className={`w-2 h-2 rounded-full mt-2 ${
+                            activity.status === "success"
+                              ? "bg-accent"
+                              : activity.status === "warning"
+                              ? "bg-destructive"
+                              : "bg-primary"
+                          }`}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-foreground font-medium">{activity.action}</p>
+                          <p className="text-xs text-muted-foreground">{activity.time}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
       </div>
     </DashboardLayout>

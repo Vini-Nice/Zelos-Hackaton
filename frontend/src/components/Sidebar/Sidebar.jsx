@@ -72,7 +72,7 @@ export default function ZelosDashboard({ onToggle }) {
   const allRoutes = [...getRoutesByUserType(), ...commonRoutes];
 
   return (
-    <aside className={`bg-white border-r border-gray-200 min-h-screen mt-14 fixed left-0 top-0 transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'
+    <aside className={`bg-white border-r border-gray-200 min-h-screen  transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'
       }`}>
       {/* Botão para colapsar/expandir */}
       <div className="flex justify-end p-2 border-b border-gray-200">
