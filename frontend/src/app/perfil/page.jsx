@@ -125,18 +125,7 @@ export default function Perfil() {
               <h1 className="text-xl font-bold text-foreground dark:text-gray-100">Meu Perfil</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={toggleTheme}
-                className="dark:border-gray-600 dark:text-gray-200"
-              >
-                {theme === "light" ? (
-                  <Moon className="h-4 w-4" />
-                ) : (
-                  <Sun className="h-4 w-4" />
-                )}
-              </Button>
+              
             </div>
           </div>
         </header>

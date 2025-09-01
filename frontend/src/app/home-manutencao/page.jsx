@@ -160,7 +160,7 @@ export default function HomeManutencao() {
           <div className="flex h-16 items-center justify-between px-6">
             <div className="flex items-center space-x-2">
               <Wrench className="h-8 w-8 text-primary dark:text-primary/80" />
-              <h1 className="text-xl font-bold text-foreground dark:text-gray-100">Painel de Manutenção</h1>
+              <h1 className="text-xl font-bold text-foreground dark:text-gray-100">Home Manutenção </h1>
             </div>
             <div className="flex items-center space-x-4">
               <Button

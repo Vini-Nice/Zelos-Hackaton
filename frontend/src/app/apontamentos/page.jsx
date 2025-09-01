@@ -4,12 +4,12 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  BarChart3, 
-  Clock, 
-  CheckCircle, 
-  AlertTriangle, 
-  Users, 
+import {
+  BarChart3,
+  Clock,
+  CheckCircle,
+  AlertTriangle,
+  Users,
   TrendingUp,
   Calendar,
   Wrench,
@@ -95,18 +95,29 @@ export default function ApontamentosAdmin() {
     }
   };
 
-  const formatTempo = (segundos) => segundos < 3600 ? `${Math.round(segundos/60)} min` : `${Math.floor(segundos/3600)}h ${Math.round((segundos%3600)/60)}min`;
+  const formatTempo = (segundos) => segundos < 3600 ? `${Math.round(segundos / 60)} min` : `${Math.floor(segundos / 3600)}h ${Math.round((segundos % 3600) / 60)}min`;
 
-  const formatData = (dataString) => new Date(dataString).toLocaleDateString('pt-BR', { 
+  const formatData = (dataString) => new Date(dataString).toLocaleDateString('pt-BR', {
     day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
   });
 
   return (
     <DashboardLayout>
+      {/* Header */}
+      <header className="border-b border-border bg-card">
+        <div className="flex h-16 items-center justify-between px-6">
+          <div className="flex items-center space-x-2">
+            <Wrench className="h-8 w-8 text-primary" />
+            <h1 className="text-xl font-bold text-foreground">Apontamentos</h1>
+          </div>
+          <div className="flex items-center space-x-4">
+
+          </div>
+        </div>
+      </header>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 md:p-10">
         <div className="max-w-7xl mx-auto space-y-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Apontamentos dos Técnicos</h1>
-          <p className="text-gray-600 dark:text-gray-300">Acompanhe a produtividade e eficiência da equipe técnica</p>
+
 
           {/* Filtros */}
           <Card>
@@ -209,12 +220,10 @@ export default function ApontamentosAdmin() {
                             <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{formatData(apont.comeco)}</span>
                           </div>
                         </div>
-                      <div className="flex flex-col items-end gap-2">
-  <Badge className={getStatusColor(apont.status)}>{apont.status}</Badge>
-  <Badge className={getPrioridadeColor(apont.prioridade)}>
-    {apont.prioridade || 'N/A'}
-  </Badge>
-</div>
+                        <div className="flex flex-col items-end gap-2">
+                          <Badge className={getStatusColor(apont.status)}>{apont.status}</Badge>
+                          
+                        </div>
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-600 dark:text-gray-400">Chamado #{apont.chamado_id}</span>

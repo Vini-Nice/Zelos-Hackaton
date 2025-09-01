@@ -34,16 +34,9 @@ export default function MaintenanceDashboard() {
   const [loading, setLoading] = useState(true);
 
   const quickActions = [
+
     {
-      title: "Nova Solicitação",
-      description: "Criar nova ordem de manutenção",
-      icon: Plus,
-      href: "/requests/new",
-      color: "bg-primary hover:bg-primary/90",
-      urgent: false,
-    },
-    {
-      title: "Ordens Pendentes",
+      title: "Chamados Pendente",
       description: "12 ordens aguardando aprovação",
       icon: Clock,
       href: "/orders/pending",
@@ -52,51 +45,39 @@ export default function MaintenanceDashboard() {
       count: 12,
     },
     {
-      title: "Manutenções Urgentes",
-      description: "3 equipamentos precisam de atenção",
+      title: "Chamados",
+      description: "Gerencie os chamados",
       icon: AlertTriangle,
-      href: "/maintenance/urgent",
+      href: "/chamados-usuarios",
       color: "bg-destructive hover:bg-destructive/90",
       urgent: true,
       count: 3,
     },
     {
-      title: "Relatórios",
-      description: "Visualizar relatórios e métricas",
+      title: "Apontamentos",
+      description: "Visualizar apontamentos",
       icon: BarChart3,
-      href: "/reports",
+      href: "/apontamentos",
       color: "bg-secondary hover:bg-secondary/90",
       urgent: false,
     },
   ];
 
   const systemModules = [
+
     {
-      title: "Equipamentos",
-      description: "Gerenciar inventário de equipamentos",
-      icon: Wrench,
-      href: "/equipment",
-      stats: "248 ativos",
-    },
-    {
-      title: "Técnicos",
-      description: "Gerenciar equipe de manutenção",
+      title: "Usuários",
+      description: "Gerencie usuários",
       icon: Users,
-      href: "/technicians",
+      href: "/integrantes",
       stats: "15 técnicos",
     },
+
     {
-      title: "Ordens de Serviço",
-      description: "Acompanhar todas as ordens",
-      icon: FileText,
-      href: "/work-orders",
-      stats: "45 abertas",
-    },
-    {
-      title: "Configurações",
-      description: "Configurar sistema e preferências",
+      title: "Perfil",
+      description: "Configurar perfil",
       icon: Settings,
-      href: "/settings",
+      href: "/perfil",
       stats: "Sistema",
     },
   ];
@@ -203,16 +184,10 @@ export default function MaintenanceDashboard() {
           <div className="flex h-16 items-center justify-between px-6">
             <div className="flex items-center space-x-2">
               <Wrench className="h-8 w-8 text-primary" />
-              <h1 className="text-xl font-bold text-foreground">Sistema de Manutenção</h1>
+              <h1 className="text-xl font-bold text-foreground">Home Administração</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm">
-                <Search className="h-4 w-4 mr-2" />
-                Buscar
-              </Button>
-              <Button variant="outline" size="sm">
-                <Bell className="h-4 w-4" />
-              </Button>
+
             </div>
           </div>
         </header>
@@ -220,17 +195,7 @@ export default function MaintenanceDashboard() {
         <div className="p-6 space-y-6">
           {/* Status Overview */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Equipamentos Ativos</p>
-                    <p className="text-2xl font-bold text-foreground">{stats.totalChamados}</p>
-                  </div>
-                  <CheckCircle className="h-8 w-8 text-accent" />
-                </div>
-              </CardContent>
-            </Card>
+
 
             <Card>
               <CardContent className="p-4">
@@ -244,17 +209,7 @@ export default function MaintenanceDashboard() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Manutenções Urgentes</p>
-                    <p className="text-2xl font-bold text-destructive">3</p>
-                  </div>
-                  <AlertTriangle className="h-8 w-8 text-destructive" />
-                </div>
-              </CardContent>
-            </Card>
+
 
             <Card>
               <CardContent className="p-4">
@@ -322,32 +277,50 @@ export default function MaintenanceDashboard() {
               </div>
             </div>
 
+            {/* card de chamados pendentes */}
             <div>
-              <h2 className="text-lg font-semibold text-foreground mb-4">Atividade Recente</h2>
+              <h2 className="text-lg font-semibold text-foreground mb-4">Chamados Pendentes</h2>
               <Card>
                 <CardContent className="p-4">
-                  <div className="space-y-4">
-                    {recentActivity.map((activity) => (
-                      <div key={activity.id} className="flex items-start space-x-3">
-                        <div
-                          className={`w-2 h-2 rounded-full mt-2 ${
-                            activity.status === "success"
-                              ? "bg-accent"
-                              : activity.status === "warning"
-                              ? "bg-destructive"
-                              : "bg-primary"
-                          }`}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-foreground font-medium">{activity.action}</p>
-                          <p className="text-xs text-muted-foreground">{activity.time}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  {recentChamados.filter(c => c.status === "pendente").length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Nenhum chamado pendente.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {recentChamados
+                        .filter((chamado) => chamado.status === "pendente")
+                        .map((chamado) => (
+                          <div key={chamado.id} className="flex items-start space-x-3">
+                            <div
+                              className={`w-2 h-2 rounded-full mt-2 ${getStatusColor(chamado.status)}`}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-foreground font-medium">
+                                {chamado.titulo || `Chamado #${chamado.id}`}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Status: {getStatusLabel(chamado.status)} •
+                                Prioridade:{" "}
+                                <span className={`px-1 rounded ${getPrioridadeColor(chamado.prioridade)}`}>
+                                  {chamado.prioridade || "N/A"}
+                                </span>
+                              </p>
+                            </div>
+                            <Link
+                              href={`/chamados/${chamado.id}`}
+                              className="text-xs text-primary hover:underline"
+                            >
+                              Ver
+                            </Link>
+                          </div>
+                        ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
+
+
+
           </div>
         </div>
       </div>

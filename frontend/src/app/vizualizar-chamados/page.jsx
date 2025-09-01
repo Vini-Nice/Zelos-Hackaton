@@ -192,14 +192,21 @@ export default function VizualizarChamados() {
 
   return (
     <DashboardLayout>
+      {/* Header */}
+      <header className="border-b border-border bg-card">
+            <div className="flex h-16 items-center justify-between px-6">
+              <div className="flex items-center space-x-2">
+                <FileText className="h-8 w-8 text-primary" />
+                <h1 className="text-xl font-bold text-foreground">Chamados</h1>
+              </div>
+              <div className="flex items-center space-x-4">
+
+              </div>
+            </div>
+          </header>
       <div className="min-h-screen bg-gray-50 p-6 md:p-10">
         <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Visualizar Chamados</h1>
-              <p className="text-gray-600">Gerencie os chamados atribuídos a você</p>
-            </div>
-          </div>
+          
 
           {/* Cards de estatísticas */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">

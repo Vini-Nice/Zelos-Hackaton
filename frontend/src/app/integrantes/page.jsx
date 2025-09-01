@@ -15,6 +15,7 @@ import {
   UserPlus,
   UserCheck,
   UserX,
+  Wrench
 } from "lucide-react";
 import {
   Dialog,
@@ -153,32 +154,24 @@ export default function Integrantes() {
 
   return (
     <DashboardLayout>
+      {/* Header */}
+      <header className="border-b border-border bg-card">
+            <div className="flex h-16 items-center justify-between px-6">
+              <div className="flex items-center space-x-2">
+                <Wrench className="h-8 w-8 text-primary" />
+                <h1 className="text-xl font-bold text-foreground">Sistema de Manutenção</h1>
+              </div>
+              <div className="flex items-center space-x-4">
+
+              </div>
+            </div>
+          </header>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 md:p-10">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Gerenciar Usuários
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                Gerencie todos os usuários do sistema
-              </p>
-            </div>
-            <Button
-              onClick={() =>
-                setFormData({
-                  nome: "",
-                  email: "",
-                  senha: "",
-                  funcao: "usuario_comum",
-                  status: "ativo",
-                })
-              }
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Novo Usuário
-            </Button>
+            
+            
           </div>
 
           {/* Formulário de Criação */}

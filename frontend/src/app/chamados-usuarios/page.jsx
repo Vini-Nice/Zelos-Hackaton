@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Search, Eye, Clock, CheckCircle, AlertTriangle, XCircle, User, Calendar } from "lucide-react";
+import { FileText, Search, Eye, Clock, CheckCircle, AlertTriangle, XCircle, User, Calendar, Wrench } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout/DashboardLayout";
 import { apiRequest } from "@/lib/auth";
 
@@ -89,16 +89,24 @@ export default function ChamadosUsuarios() {
 
   return (
     <DashboardLayout>
+      {/* Header */}
+      <header className="border-b border-border bg-card">
+        <div className="flex h-16 items-center justify-between px-6">
+          <div className="flex items-center space-x-2">
+            <FileText className="h-8 w-8 text-primary" />
+            <h1 className="text-xl font-bold text-foreground">Gerenciar Chamados</h1>
+          </div>
+          <div className="flex items-center space-x-4">
+
+          </div>
+        </div>
+      </header>
       <div className="min-h-screen bg-gray-50 p-6 md:p-10">
         <div className="max-w-7xl mx-auto space-y-6">
 
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Todos os Chamados</h1>
-              <p className="text-gray-600">Visualize e gerencie todos os chamados do sistema</p>
-            </div>
-          </div>
+
+
+
 
           {/* Estatísticas */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -184,9 +192,8 @@ export default function ChamadosUsuarios() {
                       filteredChamados.map((chamado, index) => (
                         <tr
                           key={chamado.id}
-                          className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                            index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                          }`}
+                          className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                            }`}
                         >
                           <td className="py-3 px-4">
                             <div>

@@ -34,19 +34,19 @@ export default function ZelosDashboard({ onToggle }) {
   const getRoutesByUserType = () => {
     if (user?.funcao === "admin") {
       return [
-        { href: "/home-adm", icon: Home, label: "Dashboard Admin" },
+        { href: "/home-adm", icon: Home, label: "Home" },
         { href: "/integrantes", icon: Users, label: "Gerenciar Usuários" },
-        { href: "/chamados-usuarios", icon: FileText, label: "Todos os Chamados" },
+        { href: "/chamados-usuarios", icon: FileText, label: "Gerenciar Chamados" },
         { href: "/apontamentos", icon: Wrench, label: "Apontamentos" },
       ];
     } else if (user?.funcao === "tecnico") {
       return [
-        { href: "/home-manutencao", icon: Wrench, label: "Dashboard Técnico" },
+        { href: "/home-manutencao", icon: Wrench, label: "Home" },
         { href: "/vizualizar-chamados", icon: FileText, label: "Visualizar Chamados" },
       ];
     } else if (user?.funcao === "usuario_comum") {
       return [
-        { href: "/", icon: Home, label: "Página Principal" },
+        { href: "/", icon: Home, label: "Home" },
         { href: "/abrir-chamado", icon: FileText, label: "Abrir Chamado" },
         { href: "/meus-chamados", icon: FileText, label: "Meus Chamados" },
       ];
@@ -57,8 +57,7 @@ export default function ZelosDashboard({ onToggle }) {
   const commonRoutes = [
     { href: "/perfil", icon: User, label: "Perfil" },
     { href: "/ajuda", icon: HelpCircle, label: "Ajuda" },
-    { href: "/suporte", icon: MessageSquare, label: "Suporte" },
-    { href: "/tutoriais", icon: GraduationCap, label: "Tutoriais" },
+    { href: "/suporte", icon: MessageSquare, label: "Suporte" }
   ];
 
   const allRoutes = [...getRoutesByUserType(), ...commonRoutes];

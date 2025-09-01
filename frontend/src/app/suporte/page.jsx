@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Send, MessageSquare, HelpCircle, Phone, Mail, Clock, ArrowLeft } from "lucide-react";
+import { Send, MessageSquare, HelpCircle, Phone, Mail, Clock, ArrowLeft, Wrench } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout/DashboardLayout";
 
 const perguntasSuporte = [
@@ -197,16 +197,16 @@ export default function Suporte() {
 
   const enviarMensagem = () => {
     if (novaMensagem.trim() === "") return;
-    
+
     const mensagemUsuario = {
       de: "usuário",
       texto: novaMensagem,
       hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
     };
-    
+
     setMensagens([...mensagens, mensagemUsuario]);
     setNovaMensagem("");
-    
+
     // Simular resposta automática
     setTimeout(() => {
       const respostas = [
@@ -216,15 +216,15 @@ export default function Suporte() {
         "Vou verificar as informações e retorno em breve.",
         "Obrigado pelo contato. Nossa equipe está analisando."
       ];
-      
+
       const respostaAleatoria = respostas[Math.floor(Math.random() * respostas.length)];
-      
+
       const mensagemSuporte = {
         de: "suporte",
         texto: respostaAleatoria,
         hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
       };
-      
+
       setMensagens(prev => [...prev, mensagemSuporte]);
     }, 1000);
   };
@@ -238,13 +238,24 @@ export default function Suporte() {
 
   return (
     <DashboardLayout>
+
+      {/* Header */}
+      <header className="border-b border-border bg-card">
+        <div className="flex h-16 items-center justify-between px-6">
+          <div className="flex items-center space-x-2">
+            <Wrench className="h-8 w-8 text-primary" />
+            <h1 className="text-xl font-bold text-foreground">Suporte</h1>
+          </div>
+          <div className="flex items-center space-x-4">
+
+          </div>
+        </div>
+      </header>
+
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 md:p-10">
         <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Suporte ao Usuário</h1>
-            <p className="text-gray-600 dark:text-gray-300">Escolha a opção que melhor descreve sua necessidade</p>
-          </div>
+
+
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Sistema de Perguntas */}
@@ -279,7 +290,7 @@ export default function Suporte() {
                       <HelpCircle className="h-6 w-6 mr-3 text-blue-600" />
                       {perguntasSuporte[perguntaAtual].pergunta}
                     </h2>
-                    
+
                     <div className="space-y-3">
                       {perguntasSuporte[perguntaAtual].opcoes.map((opcao, index) => (
                         <button
@@ -304,7 +315,7 @@ export default function Suporte() {
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                         {respostasAutomaticas[respostaSelecionada].titulo}
                       </h3>
-                      
+
                       <div className="space-y-3 mb-6">
                         {respostasAutomaticas[respostaSelecionada].solucoes.map((solucao, index) => (
                           <div key={index} className="flex items-start gap-3">
@@ -372,11 +383,10 @@ export default function Suporte() {
                         className={`flex ${m.de === "usuário" ? "justify-end" : "justify-start"}`}
                       >
                         <div
-                          className={`max-w-[70%] p-3 rounded-xl ${
-                            m.de === "usuário" 
-                              ? "bg-blue-500 text-white rounded-br-none" 
+                          className={`max-w-[70%] p-3 rounded-xl ${m.de === "usuário"
+                              ? "bg-blue-500 text-white rounded-br-none"
                               : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-bl-none"
-                          }`}
+                            }`}
                         >
                           <p className="text-sm">{m.texto}</p>
                           <span className="text-xs text-gray-400 dark:text-gray-300 mt-1 block text-right">
