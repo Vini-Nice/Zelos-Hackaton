@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import {
   Users,
-  Search,
   Plus,
   Edit,
   Trash2,
@@ -84,8 +83,6 @@ export default function Integrantes() {
       delete updateData.id;
       delete updateData.criado_em;
       delete updateData.atualizado_em;
-
-      // não enviar senha se estiver vazia
       if (!updateData.senha) delete updateData.senha;
 
       await apiRequest(`/api/usuarios/${userId}`, {
@@ -104,9 +101,7 @@ export default function Integrantes() {
     if (!confirm("Tem certeza que deseja excluir este usuário?")) return;
 
     try {
-      await apiRequest(`/api/usuarios/${userId}`, {
-        method: "DELETE",
-      });
+      await apiRequest(`/api/usuarios/${userId}`, { method: "DELETE" });
       fetchUsuarios();
     } catch (error) {
       console.error("Erro ao excluir usuário:", error);
@@ -116,20 +111,20 @@ export default function Integrantes() {
   const getFuncaoColor = (funcao) => {
     switch (funcao) {
       case "admin":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
       case "tecnico":
-        return "bg-blue-100 text-blue-800";
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
       case "usuario_comum":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
     }
   };
 
   const getStatusColor = (status) => {
     return status === "ativo"
-      ? "bg-green-100 text-green-800"
-      : "bg-red-100 text-red-800";
+      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
   };
 
   const filteredUsuarios = usuarios.filter((usuario) => {
@@ -144,14 +139,12 @@ export default function Integrantes() {
     return matchesSearch && matchesFuncao && matchesStatus;
   });
 
-  if (user?.funcao !== "admin") {
-    return null;
-  }
+  if (user?.funcao !== "admin") return null;
 
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="min-h-screen bg-gray-50 p-6 md:p-10 flex items-center justify-center">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 md:p-10 flex items-center justify-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
         </div>
       </DashboardLayout>
@@ -160,15 +153,15 @@ export default function Integrantes() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gray-50 p-6 md:p-10">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 md:p-10">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                 Gerenciar Usuários
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-400">
                 Gerencie todos os usuários do sistema
               </p>
             </div>
@@ -189,9 +182,9 @@ export default function Integrantes() {
           </div>
 
           {/* Formulário de Criação */}
-          <Card>
+          <Card className="bg-white dark:bg-gray-800">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
                 <Plus className="h-5 w-5" />
                 Criar Novo Usuário
               </CardTitle>
@@ -265,9 +258,9 @@ export default function Integrantes() {
           </Card>
 
           {/* Lista de Usuários */}
-          <Card>
+          <Card className="bg-white dark:bg-gray-800">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
                 <Users className="h-5 w-5" />
                 Usuários do Sistema
               </CardTitle>
@@ -276,23 +269,23 @@ export default function Integrantes() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="py-3 px-4 font-semibold text-gray-900">
+                    <tr className="border-b border-gray-200 dark:border-gray-700">
+                      <th className="py-3 px-4 font-semibold text-gray-900 dark:text-gray-200">
                         Usuário
                       </th>
-                      <th className="py-3 px-4 font-semibold text-gray-900">
+                      <th className="py-3 px-4 font-semibold text-gray-900 dark:text-gray-200">
                         Email
                       </th>
-                      <th className="py-3 px-4 font-semibold text-gray-900">
+                      <th className="py-3 px-4 font-semibold text-gray-900 dark:text-gray-200">
                         Função
                       </th>
-                      <th className="py-3 px-4 font-semibold text-gray-900">
+                      <th className="py-3 px-4 font-semibold text-gray-900 dark:text-gray-200">
                         Status
                       </th>
-                      <th className="py-3 px-4 font-semibold text-gray-900">
+                      <th className="py-3 px-4 font-semibold text-gray-900 dark:text-gray-200">
                         Criado em
                       </th>
-                      <th className="py-3 px-4 font-semibold text-gray-900">
+                      <th className="py-3 px-4 font-semibold text-gray-900 dark:text-gray-200">
                         Ações
                       </th>
                     </tr>
@@ -301,21 +294,21 @@ export default function Integrantes() {
                     {filteredUsuarios.map((usuario, index) => (
                       <tr
                         key={usuario.id}
-                        className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                          index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                        className={`border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
+                          index % 2 === 0 ? "bg-white dark:bg-gray-900" : "bg-gray-50 dark:bg-gray-800"
                         }`}
                       >
                         <td className="py-3 px-4">
                           <div>
-                            <p className="font-medium text-gray-900">
+                            <p className="font-medium text-gray-900 dark:text-white">
                               {usuario.nome}
                             </p>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
                               ID: {usuario.id}
                             </p>
                           </div>
                         </td>
-                        <td className="py-3 px-4 text-gray-700">
+                        <td className="py-3 px-4 text-gray-700 dark:text-gray-300">
                           {usuario.email}
                         </td>
                         <td className="py-3 px-4">
@@ -333,10 +326,8 @@ export default function Integrantes() {
                             {usuario.status}
                           </Badge>
                         </td>
-                        <td className="py-3 px-4 text-gray-700">
-                          {new Date(usuario.criado_em).toLocaleDateString(
-                            "pt-BR"
-                          )}
+                        <td className="py-3 px-4 text-gray-700 dark:text-gray-300">
+                          {new Date(usuario.criado_em).toLocaleDateString("pt-BR")}
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
@@ -352,7 +343,7 @@ export default function Integrantes() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDeleteUser(usuario.id)}
-                              className="h-8 w-8 p-0 text-red-600"
+                              className="h-8 w-8 p-0 text-red-600 dark:text-red-400"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -370,9 +361,9 @@ export default function Integrantes() {
 
       {/* Modal de Edição */}
       <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
-        <DialogContent>
+        <DialogContent className="bg-white dark:bg-gray-800">
           <DialogHeader>
-            <DialogTitle>Editar Usuário</DialogTitle>
+            <DialogTitle className="text-gray-900 dark:text-white">Editar Usuário</DialogTitle>
           </DialogHeader>
 
           {editingUser && (
@@ -439,7 +430,7 @@ export default function Integrantes() {
               </Select>
 
               <DialogFooter>
-                <Button type="submit" className="bg-blue-600 text-white">
+                <Button type="submit" className="bg-blue-600 dark:bg-blue-500 text-white">
                   Salvar
                 </Button>
                 <Button

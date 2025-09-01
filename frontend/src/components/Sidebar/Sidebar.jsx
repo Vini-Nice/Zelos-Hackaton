@@ -6,21 +6,16 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Home,
-  Plus,
   MessageSquare,
   User,
   LogOut,
-  BookOpen,
   GraduationCap,
   HelpCircle,
   Users,
-  Settings,
   FileText,
   ChevronLeft,
   ChevronRight,
-  UserPlus,
   Wrench,
-  Bell
 } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider/AuthProvider";
 
@@ -31,13 +26,11 @@ export default function ZelosDashboard({ onToggle }) {
 
   const isActive = (path) => pathname === path;
 
-  // Redirecionamento de logout
   const handleLogout = () => {
     logout();
     window.location.href = "/login";
   };
 
-  // Rotas específicas para cada tipo de usuário
   const getRoutesByUserType = () => {
     if (user?.funcao === "admin") {
       return [
@@ -61,7 +54,6 @@ export default function ZelosDashboard({ onToggle }) {
     return [];
   };
 
-  // Rotas comuns para todos os usuários
   const commonRoutes = [
     { href: "/perfil", icon: User, label: "Perfil" },
     { href: "/ajuda", icon: HelpCircle, label: "Ajuda" },
@@ -72,10 +64,13 @@ export default function ZelosDashboard({ onToggle }) {
   const allRoutes = [...getRoutesByUserType(), ...commonRoutes];
 
   return (
-    <aside className={`bg-white border-r border-gray-200 min-h-screen  transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'
-      }`}>
-      {/* Botão para colapsar/expandir */}
-      <div className="flex justify-end p-2 border-b border-gray-200">
+    <aside
+      className={`bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 min-h-screen transition-all duration-300 ${
+        isCollapsed ? "w-16" : "w-64"
+      }`}
+    >
+      {/* Botão colapsar */}
+      <div className="flex justify-end p-2 border-b border-gray-200 dark:border-gray-700">
         <Button
           variant="ghost"
           size="sm"
@@ -86,37 +81,43 @@ export default function ZelosDashboard({ onToggle }) {
           }}
           className="h-8 w-8 p-0"
         >
-          {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          {isCollapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <ChevronLeft className="h-4 w-4" />
+          )}
         </Button>
       </div>
 
+      {/* Navegação */}
       <nav className="p-4 space-y-2">
-        {/* Links específicos por função */}
         {allRoutes.map(({ href, icon: Icon, label }) => (
           <Link href={href} key={href} passHref>
             <Button
               variant={isActive(href) ? "default" : "ghost"}
-              className={`w-full justify-start ${isActive(href)
-                  ? "text-white bg-blue-600"
-                  : "text-gray-700 hover:bg-gray-100"
-                } ${isCollapsed ? 'px-2' : 'px-4'}`}
+              className={`w-full justify-start ${
+                isActive(href)
+                  ? "text-white bg-blue-600 dark:bg-blue-500"
+                  : "text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+              } ${isCollapsed ? "px-2" : "px-4"}`}
               title={isCollapsed ? label : undefined}
             >
-              <Icon className={`h-4 w-4 ${isCollapsed ? 'mr-0' : 'mr-3'}`} />
+              <Icon className={`h-4 w-4 ${isCollapsed ? "mr-0" : "mr-3"}`} />
               {!isCollapsed && label}
             </Button>
           </Link>
         ))}
 
-        {/* Botão de logout */}
+        {/* Logout */}
         <Button
           onClick={handleLogout}
           variant="ghost"
-          className={`w-full justify-start text-gray-700 hover:bg-gray-100 ${isCollapsed ? 'px-2' : 'px-4'
-            }`}
+          className={`w-full justify-start text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800 ${
+            isCollapsed ? "px-2" : "px-4"
+          }`}
           title={isCollapsed ? "Sair" : undefined}
         >
-          <LogOut className={`h-4 w-4 ${isCollapsed ? 'mr-0' : 'mr-3'}`} />
+          <LogOut className={`h-4 w-4 ${isCollapsed ? "mr-0" : "mr-3"}`} />
           {!isCollapsed && "Sair"}
         </Button>
       </nav>

@@ -1,63 +1,152 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { FileText, Clock, CheckCircle, HelpCircle, AlertTriangle, User } from "lucide-react";
-import { useAuth } from "@/components/AuthProvider/AuthProvider";
-import { apiRequest } from "@/lib/auth";
+import { useRouter } from "next/navigation";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FileText, Clock, AlertTriangle, CheckCircle, Plus, Search, Bell, Moon, Sun } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
-const acoes = [
-  { label: "Abrir Chamado", link: "/abrir-chamado", icon: <FileText className="h-10 w-10 text-blue-600" /> },
-  { label: "Meus Chamados", link: "/meus-chamados", icon: <Clock className="h-10 w-10 text-purple-600" /> },
-  { label: "Ajuda", link: "/ajuda", icon: <HelpCircle className="h-10 w-10 text-green-600" /> },
-];
+import { apiRequest } from "@/lib/auth";
+import Link from "next/link";
 
-const statusColors = {
-  "pendente": "bg-yellow-100 text-yellow-800",
-  "em andamento": "bg-blue-100 text-blue-800",
-  "concluído": "bg-green-100 text-green-800",
-};
-
-export default function DashboardUsuario() {
-  const { user } = useAuth();
-  const [meusChamados, setMeusChamados] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default function MaintenanceDashboard() {
+  const router = useRouter();
   const [stats, setStats] = useState({
-    abertos: 0,
-    resolvidos: 0,
-    pendentes: 0
+    totalChamados: 0,
+    chamadosPendentes: 0,
+    chamadosResolvidos: 0,
   });
+  const [recentChamados, setRecentChamados] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [theme, setTheme] = useState("light");
+
+  const quickActions = [
+    {
+      title: "Nova Solicitação",
+      description: "Criar nova ordem de manutenção",
+      icon: Plus,
+      href: "/requests/new",
+      color: "bg-primary hover:bg-primary/90 dark:bg-primary/80 dark:hover:bg-primary/70",
+      urgent: false,
+    },
+    {
+      title: "Meus Chamados Pendentes",
+      description: "Visualizar suas ordens pendentes",
+      icon: Clock,
+      href: "/orders/pending",
+      color: "bg-accent hover:bg-accent/90 dark:bg-accent/80 dark:hover:bg-accent/70",
+      urgent: true,
+      count: stats.chamadosPendentes,
+    },
+    {
+      title: "Chamados Urgentes",
+      description: "Seus chamados com prioridade alta",
+      icon: AlertTriangle,
+      href: "/maintenance/urgent",
+      color: "bg-destructive hover:bg-destructive/90 dark:bg-destructive/80 dark:hover:bg-destructive/70",
+      urgent: true,
+      count: Array.isArray(recentChamados)
+        ? recentChamados.filter((c) => (c.prioridade || "").toLowerCase() === "alta").length
+        : 0,
+    },
+  ];
 
   useEffect(() => {
-    const fetchChamados = async () => {
-      try {
-        if (user) {
-          const chamados = await apiRequest(`/api/chamados?usuario_id=${user.id}`);
-          setMeusChamados(chamados.slice(0, 5)); // Últimos 5 chamados
-          
-          // Calcular estatísticas
-          const abertos = chamados.filter(c => c.status === 'pendente').length;
-          const resolvidos = chamados.filter(c => c.status === 'concluído').length;
-          const pendentes = chamados.filter(c => c.status === 'em andamento').length;
-          
-          setStats({ abertos, resolvidos, pendentes });
-        }
-      } catch (error) {
-        console.error('Erro ao carregar chamados:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Aplicar tema ao carregar
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [theme]);
 
-    fetchChamados();
-  }, [user]);
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      const chamados = await apiRequest("/api/chamados", "GET"); // Assumindo que retorna apenas os chamados do usuário autenticado
+
+      const chamadosArray = Array.isArray(chamados) ? chamados : [];
+
+      setStats({
+        totalChamados: chamadosArray.length,
+        chamadosPendentes: chamadosArray.filter((c) => (c.status || "").toLowerCase() === "pendente").length,
+        chamadosResolvidos: chamadosArray.filter((c) =>
+          ["concluido", "concluído"].includes((c.status || "").toLowerCase())
+        ).length,
+      });
+
+      setRecentChamados(chamadosArray.slice(0, 5));
+    } catch (error) {
+      console.error("Erro ao carregar dados do dashboard:", error);
+      if (error.status === 401) {
+        router.push("/login");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleTheme = () => {
+    setTheme(theme === "light" ? "dark" : "light");
+  };
+
+  const getStatusColor = (status) => {
+    switch ((status || "").toLowerCase()) {
+      case "pendente":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+      case "em andamento":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+      case "concluido":
+      case "concluído":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      case "cancelado":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
+    }
+  };
+
+  const getPrioridadeColor = (prioridade) => {
+    switch ((prioridade || "").toLowerCase()) {
+      case "alta":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      case "média":
+      case "media":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+      case "baixa":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    switch ((status || "").toLowerCase()) {
+      case "pendente":
+        return "Pendente";
+      case "em andamento":
+        return "Em Andamento";
+      case "concluido":
+      case "concluído":
+        return "Concluído";
+      case "cancelado":
+        return "Cancelado";
+      default:
+        return status;
+    }
+  };
 
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="min-h-screen bg-gray-50 p-6 md:p-10 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="min-h-screen bg-background dark:bg-gray-900 p-6 md:p-10 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 dark:border-blue-400"></div>
         </div>
       </DashboardLayout>
     );
@@ -65,121 +154,137 @@ export default function DashboardUsuario() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gray-50 p-6 md:p-10">
-        <div className="max-w-7xl mx-auto space-y-10">
-          
-          {/* Header com perfil */}
-          <div className="flex items-center justify-between bg-white p-6 rounded-xl shadow-sm border">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Olá, {user?.nome || 'Usuário'}!</h1>
-              <p className="text-gray-600">Aqui está o resumo da sua conta e chamados.</p>
-              <p className="text-sm text-blue-600 capitalize mt-1">Função: {user?.funcao}</p>
+      <div className="min-h-screen bg-background dark:bg-gray-900">
+        {/* Header */}
+        <header className="border-b border-border bg-card dark:bg-gray-800 dark:border-gray-700">
+          <div className="flex h-16 items-center justify-between px-6">
+            <div className="flex items-center space-x-2">
+              <FileText className="h-8 w-8 text-primary dark:text-primary/80" />
+              <h1 className="text-xl font-bold text-foreground dark:text-gray-100">Painel do Usuário</h1>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="bg-gray-200 rounded-full p-2">
-                <User className="h-8 w-8 text-gray-700" />
-              </div>
+            <div className="flex items-center space-x-4">
+              <Button variant="outline" size="sm" className="dark:border-gray-600 dark:text-gray-200">
+                <Search className="h-4 w-4 mr-2" />
+                Buscar
+              </Button>
+              <Button variant="outline" size="sm" className="dark:border-gray-600 dark:text-gray-200">
+                <Bell className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleTheme}
+                className="dark:border-gray-600 dark:text-gray-200"
+              >
+                {theme === "light" ? (
+                  <Moon className="h-4 w-4" />
+                ) : (
+                  <Sun className="h-4 w-4" />
+                )}
+              </Button>
             </div>
           </div>
+        </header>
 
-          {/* Ações rápidas */}
+        <div className="p-6 space-y-6">
+          {/* Status Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground dark:text-gray-400">Meus Chamados</p>
+                    <p className="text-2xl font-bold text-foreground dark:text-gray-100">{stats.totalChamados}</p>
+                  </div>
+                  <FileText className="h-8 w-8 text-primary dark:text-primary/80" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground dark:text-gray-400">Chamados Pendentes</p>
+                    <p className="text-2xl font-bold text-foreground dark:text-gray-100">{stats.chamadosPendentes}</p>
+                  </div>
+                  <Clock className="h-8 w-8 text-accent dark:text-accent/80" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground dark:text-gray-400">Chamados Concluídos</p>
+                    <p className="text-2xl font-bold text-foreground dark:text-gray-100">{stats.chamadosResolvidos}</p>
+                  </div>
+                  <CheckCircle className="h-8 w-8 text-green-500 dark:text-green-400" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quick Actions */}
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Ações Rápidas</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {acoes.map(({ label, link, icon }) => (
-                <Link
-                  key={label}
-                  href={link}
-                  className="bg-white rounded-xl shadow p-6 flex flex-col items-center justify-center gap-3 border hover:shadow-md transition hover:scale-[1.02]"
+            <h2 className="text-lg font-semibold text-foreground dark:text-gray-100 mb-4">Ações Rápidas</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {quickActions.map((action, index) => (
+                <Card
+                  key={index}
+                  className="hover:shadow-md transition-shadow cursor-pointer dark:bg-gray-800 dark:border-gray-700"
                 >
-                  {icon}
-                  <span className="font-semibold text-gray-900">{label}</span>
-                </Link>
+                  <CardContent className="p-4">
+                    <Link href={action.href} className="block">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className={`p-2 rounded-lg ${action.color}`}>
+                          <action.icon className="h-5 w-5 text-white" />
+                        </div>
+                        {action.urgent && action.count > 0 && (
+                          <Badge variant="destructive" className="text-xs dark:bg-red-900 dark:text-red-200">
+                            {action.count}
+                          </Badge>
+                        )}
+                      </div>
+                      <h3 className="font-semibold text-foreground dark:text-gray-100 mb-1">{action.title}</h3>
+                      <p className="text-sm text-muted-foreground dark:text-gray-400">{action.description}</p>
+                    </Link>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </div>
 
-          {/* Estatísticas do usuário */}
+          {/* Recent Activity */}
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Resumo Rápido</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white p-6 rounded-xl shadow-sm border text-center">
-                <p className="text-4xl font-bold text-blue-600">{stats.abertos}</p>
-                <p className="text-gray-600">Chamados Abertos</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm border text-center">
-                <p className="text-4xl font-bold text-green-600">{stats.resolvidos}</p>
-                <p className="text-gray-600">Chamados Resolvidos</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm border text-center">
-                <p className="text-4xl font-bold text-yellow-600">{stats.pendentes}</p>
-                <p className="text-gray-600">Pendentes de Resposta</p>
-              </div>
-            </div>
+            <h2 className="text-lg font-semibold text-foreground dark:text-gray-100 mb-4">Meus Chamados Recentes</h2>
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
+              <CardContent className="p-4">
+                <div className="space-y-4">
+                  {recentChamados.length > 0 ? (
+                    recentChamados.map((chamado) => (
+                      <div key={chamado.id} className="flex items-start space-x-3">
+                        <div
+                          className={`w-2 h-2 rounded-full mt-2 ${getStatusColor(chamado.status)}`}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-foreground dark:text-gray-100 font-medium">
+                            Chamado #{chamado.id} - {chamado.titulo || "Sem título"}
+                          </p>
+                          <p className="text-xs text-muted-foreground dark:text-gray-400">
+                            {getStatusLabel(chamado.status)} • Prioridade: {chamado.prioridade || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground dark:text-gray-400">Nenhum chamado recente.</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
-
-          {/* Meus chamados */}
-          <div className="bg-white rounded-xl shadow-sm border p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Meus Chamados Recentes</h2>
-            {meusChamados.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-gray-300">
-                      <th className="py-2 px-4">Título</th>
-                      <th className="py-2 px-4">Data</th>
-                      <th className="py-2 px-4">Status</th>
-                      <th className="py-2 px-4">Tipo</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {meusChamados.map((chamado, i) => (
-                      <tr
-                        key={chamado.id}
-                        className={`border-b border-gray-200 ${i % 2 === 0 ? "bg-gray-50" : "bg-white"}`}
-                      >
-                        <td className="py-2 px-4">{chamado.titulo}</td>
-                        <td className="py-2 px-4">
-                          {new Date(chamado.criado_em).toLocaleDateString('pt-BR')}
-                        </td>
-                        <td className="py-2 px-4">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-semibold ${statusColors[chamado.status]}`}
-                          >
-                            {chamado.status}
-                          </span>
-                        </td>
-                        <td className="py-2 px-4">{chamado.tipo_id}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <p>Nenhum chamado encontrado.</p>
-                <Link href="/abrir-chamado" className="text-blue-600 hover:underline mt-2 inline-block">
-                  Abrir seu primeiro chamado
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* Mensagens e alertas */}
-          <div className="bg-white rounded-xl shadow-sm border p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Avisos Importantes</h2>
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-3 bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
-                <AlertTriangle className="text-yellow-600" />
-                <p className="text-gray-700">O sistema passará por manutenção no dia 20/08/2025, das 02h às 05h.</p>
-              </div>
-              <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                <CheckCircle className="text-blue-600" />
-                <p className="text-gray-700">Bem-vindo ao sistema Zelos! Use as ações rápidas para começar.</p>
-              </div>
-            </div>
-          </div>
-
         </div>
       </div>
     </DashboardLayout>

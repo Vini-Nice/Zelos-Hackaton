@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout/DashboardLayout";
 import { useAuth } from "@/components/AuthProvider/AuthProvider";
@@ -6,24 +7,32 @@ import { apiRequest } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Eye, EyeOff, User, Mail, Calendar, Shield, Save, X } from "lucide-react";
+import { User, Mail, Calendar, Shield, Save, X, Moon, Sun } from "lucide-react";
 
 export default function Perfil() {
   const { user } = useAuth();
   const [usuario, setUsuario] = useState(null);
   const [editando, setEditando] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [form, setForm] = useState({ 
-    nome: "", 
-    email: "", 
+  const [form, setForm] = useState({
+    nome: "",
+    email: "",
     senha: "",
     funcao: "",
-    status: ""
+    status: "",
   });
   const [loading, setLoading] = useState(true);
+  const [theme, setTheme] = useState("light");
+
+  useEffect(() => {
+    // Aplicar tema ao carregar
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [theme]);
 
   useEffect(() => {
     const load = async () => {
@@ -31,12 +40,12 @@ export default function Perfil() {
       try {
         const data = await apiRequest(`/api/usuarios/${user.id}`);
         setUsuario(data);
-        setForm({ 
-          nome: data.nome, 
-          email: data.email, 
+        setForm({
+          nome: data.nome,
+          email: data.email,
           senha: "",
           funcao: data.funcao,
-          status: data.status
+          status: data.status,
         });
       } catch (e) {
         console.error(e);
@@ -59,10 +68,10 @@ export default function Perfil() {
       }
       delete updateData.funcao; // Não permitir alterar função
       delete updateData.status; // Não permitir alterar status
-      
+
       await apiRequest(`/api/usuarios/${user.id}`, {
         method: "PUT",
-        body: JSON.stringify(updateData)
+        body: JSON.stringify(updateData),
       });
       setEditando(false);
       setUsuario({ ...usuario, nome: form.nome, email: form.email });
@@ -72,101 +81,117 @@ export default function Perfil() {
     }
   };
 
+  const toggleTheme = () => {
+    setTheme(theme === "light" ? "dark" : "light");
+  };
+
   const getFuncaoColor = (funcao) => {
     switch (funcao) {
-      case "admin": return "bg-red-100 text-red-800";
-      case "tecnico": return "bg-blue-100 text-blue-800";
-      case "aluno": return "bg-green-100 text-green-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "admin":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      case "tecnico":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+      case "aluno":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
     }
   };
 
   const getStatusColor = (status) => {
-    return status === "ativo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
+    return status === "ativo"
+      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-        <div className="max-w-4xl mx-auto">
+      <div className="min-h-screen bg-background dark:bg-gray-900">
+        {/* Header */}
+        <header className="border-b border-border bg-card dark:bg-gray-800 dark:border-gray-700">
+          <div className="flex h-16 items-center justify-between px-6">
+            <div className="flex items-center space-x-2">
+              <User className="h-8 w-8 text-primary dark:text-primary/80" />
+              <h1 className="text-xl font-bold text-foreground dark:text-gray-100">Meu Perfil</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleTheme}
+                className="dark:border-gray-600 dark:text-gray-200"
+              >
+                {theme === "light" ? (
+                  <Moon className="h-4 w-4" />
+                ) : (
+                  <Sun className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        <div className="p-6">
           {loading ? (
             <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
             </div>
           ) : (
-            <>
-              <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Meu Perfil</h1>
-                <p className="text-gray-600 dark:text-gray-400">Gerencie suas informações pessoais</p>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Informações do Usuário */}
-                <Card className="dark:bg-gray-800">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
-                      <User className="h-5 w-5" />
-                      Informações Pessoais
-                    </CardTitle>
-                    <CardDescription className="text-gray-600 dark:text-gray-400">
-                      Dados básicos da sua conta
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
+                <Card className="dark:bg-gray-800 dark:border-gray-700">
+                  <CardContent className="p-6 space-y-4">
                     <div className="flex items-center gap-3">
-                      <Mail className="h-4 w-4 text-gray-500" />
+                      <Mail className="h-4 w-4 text-muted-foreground dark:text-gray-400" />
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">{usuario?.email}</p>
+                        <p className="text-sm text-muted-foreground dark:text-gray-400">Email</p>
+                        <p className="font-medium text-foreground dark:text-gray-100">{usuario?.email}</p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
-                      <Shield className="h-4 w-4 text-gray-500" />
+                      <Shield className="h-4 w-4 text-muted-foreground dark:text-gray-400" />
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Função</p>
-                        <Badge className={getFuncaoColor(usuario?.funcao)}>
-                          {usuario?.funcao}
-                        </Badge>
+                        <p className="text-sm text-muted-foreground dark:text-gray-400">Função</p>
+                        <Badge className={getFuncaoColor(usuario?.funcao)}>{usuario?.funcao}</Badge>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
-                      <Shield className="h-4 w-4 text-gray-500" />
+                      <Shield className="h-4 w-4 text-muted-foreground dark:text-gray-400" />
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Status</p>
-                        <Badge className={getStatusColor(usuario?.status)}>
-                          {usuario?.status}
-                        </Badge>
+                        <p className="text-sm text-muted-foreground dark:text-gray-400">Status</p>
+                        <Badge className={getStatusColor(usuario?.status)}>{usuario?.status}</Badge>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
-                      <Calendar className="h-4 w-4 text-gray-500" />
+                      <Calendar className="h-4 w-4 text-muted-foreground dark:text-gray-400" />
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Membro desde</p>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">
+                        <p className="text-sm text-muted-foreground dark:text-gray-400">Membro desde</p>
+                        <p className="font-medium text-foreground dark:text-gray-100">
                           {formatDate(usuario?.criado_em)}
                         </p>
                       </div>
                     </div>
-                    
+
                     {usuario?.atualizado_em && (
                       <div className="flex items-center gap-3">
-                        <Calendar className="h-4 w-4 text-gray-500" />
+                        <Calendar className="h-4 w-4 text-muted-foreground dark:text-gray-400" />
                         <div>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">Última atualização</p>
-                          <p className="font-medium text-gray-900 dark:text-gray-100">
+                          <p className="text-sm text-muted-foreground dark:text-gray-400">Última atualização</p>
+                          <p className="font-medium text-foreground dark:text-gray-100">
                             {formatDate(usuario?.atualizado_em)}
                           </p>
                         </div>
@@ -176,36 +201,23 @@ export default function Perfil() {
                 </Card>
 
                 {/* Formulário de Edição */}
-                <Card className="dark:bg-gray-800">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
-                      {editando ? "Editar Informações" : "Informações Editáveis"}
-                    </CardTitle>
-                    <CardDescription className="text-gray-600 dark:text-gray-400">
-                      {editando ? "Modifique suas informações" : "Clique em editar para modificar"}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
+                <Card className="dark:bg-gray-800 dark:border-gray-700">
+                  <CardContent className="p-6">
                     {!editando ? (
                       <div className="space-y-4">
                         <div>
-                          <Label className="text-sm text-gray-500 dark:text-gray-400">Nome</Label>
-                          <p className="font-medium text-gray-900 dark:text-gray-100">{usuario?.nome}</p>
+                          <Label className="text-sm text-muted-foreground dark:text-gray-400">Nome</Label>
+                          <p className="font-medium text-foreground dark:text-gray-100">{usuario?.nome}</p>
                         </div>
-                        
+
                         <div>
-                          <Label className="text-sm text-gray-500 dark:text-gray-400">Senha</Label>
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-gray-900 dark:text-gray-100">
-                              {showPassword ? "••••••••" : "••••••••"}
-                            </p>
-                           
-                          </div>
+                          <Label className="text-sm text-muted-foreground dark:text-gray-400">Senha</Label>
+                          <p className="font-medium text-foreground dark:text-gray-100">••••••••</p>
                         </div>
-                        
-                        <Button 
+
+                        <Button
                           onClick={() => setEditando(true)}
-                          className="w-full"
+                          className="w-full bg-primary text-white hover:bg-primary/90 dark:bg-primary/80 dark:hover:bg-primary/70"
                         >
                           Editar Perfil
                         </Button>
@@ -213,32 +225,32 @@ export default function Perfil() {
                     ) : (
                       <form onSubmit={(e) => { e.preventDefault(); handleUpdate(); }} className="space-y-4">
                         <div>
-                          <Label htmlFor="nome" className="text-gray-700 dark:text-gray-300">Nome</Label>
+                          <Label htmlFor="nome" className="text-foreground dark:text-gray-100">Nome</Label>
                           <Input
                             id="nome"
                             name="nome"
                             value={form.nome}
                             onChange={handleChange}
-                            className="mt-1 dark:bg-gray-700 dark:text-gray-100"
+                            className="mt-1 border-gray-300 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:focus:ring-primary/80"
                             required
                           />
                         </div>
-                        
+
                         <div>
-                          <Label htmlFor="email" className="text-gray-700 dark:text-gray-300">Email</Label>
+                          <Label htmlFor="email" className="text-foreground dark:text-gray-100">Email</Label>
                           <Input
                             id="email"
                             name="email"
                             type="email"
                             value={form.email}
                             onChange={handleChange}
-                            className="mt-1 dark:bg-gray-700 dark:text-gray-100"
+                            className="mt-1 border-gray-300 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:focus:ring-primary/80"
                             required
                           />
                         </div>
-                        
+
                         <div>
-                          <Label htmlFor="senha" className="text-gray-700 dark:text-gray-300">
+                          <Label htmlFor="senha" className="text-foreground dark:text-gray-100">
                             Nova Senha (deixe em branco para manter a atual)
                           </Label>
                           <Input
@@ -247,30 +259,33 @@ export default function Perfil() {
                             type="password"
                             value={form.senha}
                             onChange={handleChange}
-                            className="mt-1 dark:bg-gray-700 dark:text-gray-100"
+                            className="mt-1 border-gray-300 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:focus:ring-primary/80"
                             placeholder="Nova senha (opcional)"
                           />
                         </div>
-                        
-                        <div className="flex gap-2">
-                          <Button type="submit" className="flex-1">
+
+                        <div className="flex gap-4">
+                          <Button
+                            type="submit"
+                            className="flex-1 bg-primary text-white hover:bg-primary/90 dark:bg-primary/80 dark:hover:bg-primary/70"
+                          >
                             <Save className="h-4 w-4 mr-2" />
                             Salvar
                           </Button>
-                          <Button 
-                            type="button" 
-                            variant="outline" 
+                          <Button
+                            type="button"
+                            variant="outline"
                             onClick={() => {
                               setEditando(false);
-                              setForm({ 
-                                nome: usuario.nome, 
-                                email: usuario.email, 
+                              setForm({
+                                nome: usuario.nome,
+                                email: usuario.email,
                                 senha: "",
                                 funcao: usuario.funcao,
-                                status: usuario.status
+                                status: usuario.status,
                               });
                             }}
-                            className="flex-1"
+                            className="flex-1 border-gray-300 text-foreground dark:border-gray-600 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                           >
                             <X className="h-4 w-4 mr-2" />
                             Cancelar
@@ -281,7 +296,7 @@ export default function Perfil() {
                   </CardContent>
                 </Card>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>
