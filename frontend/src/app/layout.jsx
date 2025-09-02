@@ -5,6 +5,7 @@ import ZelosDashboard from "@/components/Sidebar/Sidebar";
 import Header from "@/components/Header/Header";
 import SuporteFlutuante from "@/components/SuporteFlutuante/SuporteFlutuante";
 
+
 export const metadata = {
   title: "Zelos - Sistema de Chamados",
   description: "Sistema de gerenciamento de chamados e suporte técnico",
@@ -16,7 +17,9 @@ export default function RootLayout({ children }) {
       <body className="bg-background text-foreground">
         <AuthProvider>
           {children}
+        
         </AuthProvider>
+        
       </body>
     </html>
   );

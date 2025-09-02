@@ -8,16 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Wrench,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  FileText,
   Users,
   Settings,
   BarChart3,
-  Plus,
-  Search,
-  Bell,
+  Clock,
+  CheckCircle,
+  FileText,
 } from "lucide-react";
 import { apiRequest } from "@/lib/auth";
 import Link from "next/link";
@@ -25,67 +21,62 @@ import Link from "next/link";
 export default function MaintenanceDashboard() {
   const router = useRouter();
   const [stats, setStats] = useState({
-    totalChamados: 0,
     chamadosPendentes: 0,
     chamadosResolvidos: 0,
     usuariosAtivos: 0,
-    chamadosPendentesAltaPrioridade: 0, // Novo estado
   });
-  const [recentChamados, setRecentChamados] = useState([]);
+  const [recentPendingChamados, setRecentPendingChamados] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const [chamadosData, usuariosData] = await Promise.all([
+          apiRequest("/api/chamados"),
+          apiRequest("/api/usuarios"),
+        ]);
+
+        const chamados = Array.isArray(chamadosData) ? chamadosData : [];
+        const usuarios = Array.isArray(usuariosData) ? usuariosData : [];
+        
+        // 1. Filtra para pegar apenas os chamados com status "pendente"
+        const chamadosPendentes = chamados.filter(c => (c.status || "").toLowerCase() === "pendente");
+
+        // 2. Ordena os chamados pendentes por data (os mais recentes primeiro)
+        const sortedPending = chamadosPendentes.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+
+        setStats({
+          chamadosPendentes: chamadosPendentes.length,
+          chamadosResolvidos: chamados.filter(c => (c.status || "").toLowerCase() === "concluido").length,
+          usuariosAtivos: usuarios.filter(u => u.funcao === 'tecnico' && u.status === 'ativo').length, // <-- Contagem de técnicos ativos
+        });
+
+        // 3. Pega os 5 mais recentes da lista já filtrada e ordenada
+        setRecentPendingChamados(sortedPending.slice(0, 5));
+
+      } catch (error) {
+        console.error("Erro ao carregar dados do dashboard:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchDashboardData();
   }, []);
-
-  const fetchDashboardData = async () => {
-    try {
-      const [chamados, usuarios] = await Promise.all([
-        apiRequest("/api/chamados"),
-        apiRequest("/api/usuarios"),
-      ]);
-
-      const chamadosArray = Array.isArray(chamados) ? chamados : [];
-      const usuariosArray = Array.isArray(usuarios) ? usuarios : [];
-      
-      const chamadosPendentes = chamadosArray.filter((c) => (c.status || "").toLowerCase() === "pendente");
-
-      setStats({
-        totalChamados: chamadosArray.length,
-        chamadosPendentes: chamadosPendentes.length,
-        chamadosResolvidos: chamadosArray.filter((c) =>
-          ["concluido", "concluído"].includes((c.status || "").toLowerCase())
-        ).length,
-        usuariosAtivos: usuariosArray.filter((u) => (u.status || "").toLowerCase() === "ativo").length,
-        chamadosPendentesAltaPrioridade: chamadosPendentes.filter(c => (c.prioridade || "").toLowerCase() === "alta").length,
-      });
-
-      setRecentChamados(chamadosArray.slice(0, 5));
-    } catch (error) {
-      console.error("Erro ao carregar dados do dashboard:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
   
-  // As arrays foram movidas para dentro do componente para acessar o estado 'stats'
   const quickActions = [
     {
-      title: "Chamados Pendente",
-      description: `${stats.chamadosPendentes} ordens aguardando ação`,
+      title: "Chamados Pendentes",
+      description: "Ordens aguardando ação",
       icon: Clock,
-      href: "/orders/pending",
-      color: "bg-accent hover:bg-accent/90",
-      urgent: true,
+      href: "/visualizar-chamados", // <-- Rota corrigida
       count: stats.chamadosPendentes,
     },
     {
       title: "Apontamentos",
-      description: "Visualizar apontamentos",
+      description: "Visualizar e gerenciar",
       icon: BarChart3,
       href: "/apontamentos",
-      color: "bg-secondary hover:bg-secondary/90",
-      urgent: false,
     },
   ];
 
@@ -95,7 +86,7 @@ export default function MaintenanceDashboard() {
       description: "Gerencie usuários e técnicos",
       icon: Users,
       href: "/integrantes",
-      stats: `${stats.usuariosAtivos} ativos`,
+      stats: `${stats.usuariosAtivos} técnicos ativos`, // <-- Texto corrigido
     },
     {
       title: "Perfil",
@@ -106,57 +97,11 @@ export default function MaintenanceDashboard() {
     },
   ];
 
-  const getStatusColor = (status) => {
-    switch ((status || "").toLowerCase()) {
-      case "pendente":
-        return "bg-yellow-100 text-yellow-800";
-      case "em andamento":
-        return "bg-blue-100 text-blue-800";
-      case "concluido":
-      case "concluído":
-        return "bg-green-100 text-green-800";
-      case "cancelado":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getPrioridadeColor = (prioridade) => {
-    switch ((prioridade || "").toLowerCase()) {
-      case "alta":
-        return "bg-red-100 text-red-800";
-      case "média":
-      case "media":
-        return "bg-yellow-100 text-yellow-800";
-      case "baixa":
-        return "bg-green-100 text-green-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getStatusLabel = (status) => {
-    switch ((status || "").toLowerCase()) {
-      case "pendente":
-        return "Pendente";
-      case "em andamento":
-        return "Em Andamento";
-      case "concluido":
-      case "concluído":
-        return "Concluído";
-      case "cancelado":
-        return "Cancelado";
-      default:
-        return status;
-    }
-  };
-
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="min-h-screen bg-gray-50 p-6 md:p-10 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="flex h-screen items-center justify-center bg-gray-50">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
         </div>
       </DashboardLayout>
     );
@@ -165,141 +110,101 @@ export default function MaintenanceDashboard() {
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-background">
-        {/* Header */}
         <header className="border-b border-border bg-card">
           <div className="flex h-16 items-center justify-between px-6">
-            <div className="flex items-center space-x-2">
-              <Wrench className="h-8 w-8 text-primary" />
+            <div className="flex items-center space-x-3">
+              <Wrench className="h-7 w-7 text-primary" />
               <h1 className="text-xl font-bold text-foreground">Home Administração</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-
             </div>
           </div>
         </header>
 
-        <div className="p-6 space-y-6">
+        <main className="p-6 md:p-10 space-y-8">
           {/* Status Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Ordens Abertas</p>
-                    <p className="text-2xl font-bold text-foreground">{stats.chamadosPendentes}</p>
-                  </div>
-                  <Clock className="h-8 w-8 text-primary" />
-                </div>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Chamados Pendentes</CardTitle>
+                <Clock className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.chamadosPendentes}</div>
+                <p className="text-xs text-muted-foreground">Aguardando atendimento</p>
               </CardContent>
             </Card>
-
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Técnicos Disponíveis</p>
-                    <p className="text-2xl font-bold text-foreground">{stats.usuariosAtivos}</p>
-                  </div>
-                  <Users className="h-8 w-8 text-accent" />
-                </div>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Chamados Resolvidos</CardTitle>
+                <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.chamadosResolvidos}</div>
+                <p className="text-xs text-muted-foreground">Concluídos com sucesso</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Técnicos Ativos</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.usuariosAtivos}</div>
+                <p className="text-xs text-muted-foreground">Prontos para atender</p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Quick Actions */}
-          <div>
-            <h2 className="text-lg font-semibold text-foreground mb-4">Ações Rápidas</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {quickActions.map((action, index) => (
-                <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer">
-                  <CardContent className="p-4">
-                    <Link href={action.href} className="block">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className={`p-2 rounded-lg ${action.color}`}>
-                          <action.icon className="h-5 w-5 text-white" />
-                        </div>
-                        {action.urgent && action.count > 0 && (
-                          <Badge variant="destructive" className="text-xs">
-                            {action.count}
-                          </Badge>
-                        )}
-                      </div>
-                      <h3 className="font-semibold text-foreground mb-1">{action.title}</h3>
-                      <p className="text-sm text-muted-foreground">{action.description}</p>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          {/* System Modules and Recent Activity */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Quick Actions & System Modules */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
-              <h2 className="text-lg font-semibold text-foreground mb-4">Módulos do Sistema</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-4">Ações e Módulos</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {systemModules.map((module, index) => (
-                  <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <module.icon className="h-6 w-6 text-primary" />
-                        <Badge variant="secondary" className="text-xs">
-                          {module.stats}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <Link href={module.href} className="block">
-                        <CardTitle className="text-base mb-2">{module.title}</CardTitle>
-                        <CardDescription className="text-sm">{module.description}</CardDescription>
-                      </Link>
-                    </CardContent>
-                  </Card>
+                {quickActions.map((action) => (
+                  <Link href={action.href} key={action.title}>
+                    <Card className="hover:shadow-lg transition-shadow h-full">
+                      <CardHeader className="pb-3"><div className="flex items-center justify-between"><action.icon className="h-6 w-6 text-primary" />{action.count > 0 && <Badge variant="destructive">{action.count}</Badge>}</div></CardHeader>
+                      <CardContent><CardTitle className="text-base mb-1">{action.title}</CardTitle><CardDescription className="text-sm">{action.description}</CardDescription></CardContent>
+                    </Card>
+                  </Link>
+                ))}
+                 {systemModules.map((module) => (
+                  <Link href={module.href} key={module.title}>
+                    <Card className="hover:shadow-lg transition-shadow h-full">
+                      <CardHeader className="pb-3"><div className="flex items-center justify-between"><module.icon className="h-6 w-6 text-primary" /><Badge variant="secondary" className="text-xs">{module.stats}</Badge></div></CardHeader>
+                      <CardContent><CardTitle className="text-base mb-1">{module.title}</CardTitle><CardDescription className="text-sm">{module.description}</CardDescription></CardContent>
+                    </Card>
+                  </Link>
                 ))}
               </div>
             </div>
-
-            {/* card de chamados pendentes */}
-            <div>
-              <h2 className="text-lg font-semibold text-foreground mb-4">Chamados Pendentes Recentes</h2>
+            
+            <div className="lg:col-span-1">
+              <h2 className="text-xl font-semibold text-foreground mb-4">Pendentes Recentes</h2>
               <Card>
                 <CardContent className="p-4">
-                  {recentChamados.filter(c => (c.status || "").toLowerCase() === "pendente").length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Nenhum chamado pendente.</p>
+                  {recentPendingChamados.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">Nenhum chamado pendente no momento.</p>
                   ) : (
                     <div className="space-y-4">
-                      {recentChamados
-                        .filter((chamado) => (chamado.status || "").toLowerCase() === "pendente")
-                        .map((chamado) => (
-                          <div key={chamado.id} className="flex items-start space-x-3">
-                            <div
-                              className={`w-2 h-2 rounded-full mt-2 ${getStatusColor(chamado.status)}`}
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm text-foreground font-medium">
-                                {chamado.titulo || `Chamado #${chamado.id}`}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Status: {getStatusLabel(chamado.status)} 
-                                
-                               
-                              </p>
-                            </div>
-                            <Link
-                              href={`/chamados/${chamado.id}`}
-                              className="text-xs text-primary hover:underline"
-                            >
-                              Ver
-                            </Link>
+                      {recentPendingChamados.map((chamado) => (
+                        <div key={chamado.id} className="flex items-center space-x-4">
+                          <FileText className="h-5 w-5 text-muted-foreground" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium leading-none truncate" title={chamado.titulo}>{chamado.titulo}</p>
+                            <p className="text-sm text-muted-foreground">{new Date(chamado.criado_em).toLocaleDateString('pt-BR', {day: '2-digit', month: 'long'})}</p>
                           </div>
-                        ))}
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={`/chamados/${chamado.id}`}>Ver</Link>
+                          </Button>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </CardContent>
               </Card>
             </div>
           </div>
-        </div>
+        </main>
       </div>
     </DashboardLayout>
   );

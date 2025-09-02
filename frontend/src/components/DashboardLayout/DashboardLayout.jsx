@@ -5,6 +5,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute/ProtectedRoute";
 import ZelosDashboard from "@/components/Sidebar/Sidebar";
 import Header from "@/components/Header/Header";
 import SuporteFlutuante from "@/components/SuporteFlutuante/SuporteFlutuante";
+import Footer from "../Footer/Footer";
 
 export default function DashboardLayout({ children }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -24,6 +25,7 @@ export default function DashboardLayout({ children }) {
             {children}
           </div>
           <SuporteFlutuante/>
+          <Footer/>
         </main>
       </div>
     </ProtectedRoute>
