@@ -1,470 +1,178 @@
 "use client";
 
-import { useState } from "react";
-import { Send, MessageSquare, HelpCircle, Phone, Mail, Clock, ArrowLeft, Wrench } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Send, MessageSquare, HelpCircle, Phone, Mail, Clock, ArrowLeft, Wrench, Moon, Sun } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
+// Dados (mantidos como no original)
 const perguntasSuporte = [
-  {
-    id: 1,
-    pergunta: "Preciso de ajuda",
-    opcoes: [
-      {
-        texto: "Não consigo fazer login",
-        acao: "login",
-        descricao: "Problemas para acessar o sistema"
-      },
-      {
-        texto: "Esqueci minha senha",
-        acao: "senha",
-        descricao: "Recuperação de credenciais"
-      },
-      {
-        texto: "Problema com chamado",
-        acao: "chamado",
-        descricao: "Dúvidas sobre chamados"
-      },
-      {
-        texto: "Erro no sistema",
-        acao: "erro",
-        descricao: "Bugs ou problemas técnicos"
-      },
-      {
-        texto: "Outro problema",
-        acao: "outro",
-        descricao: "Outras questões"
-      }
-    ]
-  },
-  {
-    id: 2,
-    pergunta: "Como abrir um chamado?",
-    opcoes: [
-      {
-        texto: "Passo a passo",
-        acao: "tutorial",
-        descricao: "Guia visual completo"
-      },
-      {
-        texto: "Tipos de chamado",
-        acao: "tipos",
-        descricao: "Categorias disponíveis"
-      },
-      {
-        texto: "Prioridades",
-        acao: "prioridades",
-        descricao: "Como definir urgência"
-      }
-    ]
-  },
-  {
-    id: 3,
-    pergunta: "Acompanhar chamados",
-    opcoes: [
-      {
-        texto: "Ver status",
-        acao: "status",
-        descricao: "Como verificar progresso"
-      },
-      {
-        texto: "Adicionar comentários",
-        acao: "comentarios",
-        descricao: "Como interagir com técnicos"
-      },
-      {
-        texto: "Cancelar chamado",
-        acao: "cancelar",
-        descricao: "Quando e como cancelar"
-      }
-    ]
-  },
-  {
-    id: 4,
-    pergunta: "Configurações da conta",
-    opcoes: [
-      {
-        texto: "Alterar senha",
-        acao: "alterar_senha",
-        descricao: "Procedimento de segurança"
-      },
-      {
-        texto: "Dados pessoais",
-        acao: "dados",
-        descricao: "Atualizar informações"
-      },
-      {
-        texto: "Notificações",
-        acao: "notificacoes",
-        descricao: "Configurar alertas"
-      }
-    ]
-  }
+    { id: 1, pergunta: "Preciso de ajuda com o sistema", opcoes: [{ texto: "Não consigo fazer login", acao: "login", descricao: "Problemas para acessar o sistema" }, { texto: "Esqueci minha senha", acao: "senha", descricao: "Recuperação de credenciais" }, { texto: "Problema com um chamado", acao: "chamado", descricao: "Dúvidas sobre chamados" }, { texto: "Encontrei um erro", acao: "erro", descricao: "Bugs ou problemas técnicos" }, { texto: "Outra questão", acao: "outro", descricao: "Falar diretamente com suporte" }] },
+    { id: 2, pergunta: "Como funcionam os chamados?", opcoes: [{ texto: "Passo a passo para abrir", acao: "tutorial", descricao: "Guia visual completo" }, { texto: "Tipos de chamado", acao: "tipos", descricao: "Categorias disponíveis" }, { texto: "Prioridades e SLAs", acao: "prioridades", descricao: "Como definir a urgência" }] },
+    { id: 3, pergunta: "Como acompanhar meus chamados?", opcoes: [{ texto: "Verificar o status", acao: "status", descricao: "Como acompanhar o progresso" }, { texto: "Adicionar comentários", acao: "comentarios", descricao: "Como interagir com técnicos" }, { texto: "Cancelar um chamado", acao: "cancelar", descricao: "Quando e como cancelar" }] },
 ];
-
 const respostasAutomaticas = {
-  login: {
-    titulo: "Problemas de Login",
-    solucoes: [
-      "Verifique se está usando o usuário correto",
-      "Confirme se a senha está correta",
-      "Limpe o cache do navegador",
-      "Tente em uma aba anônima",
-      "Verifique se a conta não foi bloqueada"
-    ],
-    contato: true
-  },
-  senha: {
-    titulo: "Recuperação de Senha",
-    solucoes: [
-      "Clique em 'Esqueci minha senha' na tela de login",
-      "Digite seu email cadastrado",
-      "Verifique sua caixa de entrada",
-      "O link expira em 1 hora",
-      "Crie uma nova senha forte"
-    ],
-    contato: false
-  },
-  chamado: {
-    titulo: "Dúvidas sobre Chamados",
-    solucoes: [
-      "Chamados são atendidos por ordem de prioridade",
-      "Tempo médio de resposta: 24h",
-      "Você pode acompanhar o status em 'Meus Chamados'",
-      "Adicione comentários para mais detalhes",
-      "Use categorias específicas para melhor atendimento"
-    ],
-    contato: true
-  },
-  erro: {
-    titulo: "Problemas Técnicos",
-    solucoes: [
-      "Atualize a página (F5)",
-      "Limpe o cache do navegador",
-      "Verifique sua conexão com a internet",
-      "Tente em outro navegador",
-      "Se persistir, entre em contato conosco"
-    ],
-    contato: true
-  },
-  outro: {
-    titulo: "Outras Questões",
-    solucoes: [
-      "Para questões específicas, use o chat ao lado",
-      "Email: suporte@zelos.com",
-      "Telefone: (11) 99999-9999",
-      "Horário: Segunda a Sexta, 8h às 18h",
-      "WhatsApp: (11) 99999-9999"
-    ],
-    contato: true
-  }
+    login: { titulo: "Problemas de Login", solucoes: ["Verifique se seu usuário e senha estão corretos.", "Confirme se a tecla Caps Lock não está ativada.", "Tente limpar o cache e os cookies do seu navegador.", "Se o problema persistir, entre em contato para verificarmos um possível bloqueio."], contato: true },
+    senha: { titulo: "Recuperação de Senha", solucoes: ["Na tela de login, clique em 'Esqueci minha senha'.", "Digite seu e-mail cadastrado e siga as instruções.", "Você receberá um link para redefinir sua senha.", "O link de recuperação é válido por 1 hora."], contato: false },
+    outro: { titulo: "Falar com Suporte", solucoes: ["Para questões não listadas, nossa equipe está pronta para ajudar no chat.", "Por favor, inicie o chat e descreva seu problema em detalhes."], contato: true },
+    // Adicione outras respostas automáticas conforme necessário
 };
 
 export default function Suporte() {
   const [perguntaAtual, setPerguntaAtual] = useState(0);
-  const [respostaSelecionada, setRespostaSelecionada] = useState(null);
+  const [resposta, setResposta] = useState(null);
   const [chatAtivo, setChatAtivo] = useState(false);
   const [mensagens, setMensagens] = useState([]);
   const [novaMensagem, setNovaMensagem] = useState("");
+  const [theme, setTheme] = useState("light");
+  const chatEndRef = useRef(null);
 
-  const handleOpcaoClick = (acao) => {
-    setRespostaSelecionada(acao);
+  // Efeito para rolar o chat para a última mensagem
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [mensagens]);
+  
+  // Gerenciamento do tema
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains("dark");
+    setTheme(isDark ? "dark" : "light");
+  }, []);
+  
+  const toggleTheme = () => {
+    const newTheme = theme === "light" ? "dark" : "light";
+    setTheme(newTheme);
+    document.documentElement.classList.toggle("dark");
   };
 
-  const voltarPergunta = () => {
-    if (perguntaAtual > 0) {
-      setPerguntaAtual(perguntaAtual - 1);
-      setRespostaSelecionada(null);
-    }
-  };
-
-  const proximaPergunta = () => {
-    if (perguntaAtual < perguntasSuporte.length - 1) {
-      setPerguntaAtual(perguntaAtual + 1);
-      setRespostaSelecionada(null);
-    }
-  };
+  const handleOpcaoClick = (acao) => setResposta(respostasAutomaticas[acao] || respostasAutomaticas["outro"]);
+  const voltarPergunta = () => { if (perguntaAtual > 0) { setPerguntaAtual(p => p - 1); setResposta(null); }};
+  const proximaPergunta = () => { if (perguntaAtual < perguntasSuporte.length - 1) { setPerguntaAtual(p => p + 1); setResposta(null); }};
+  const resetarSuporte = () => { setPerguntaAtual(0); setResposta(null); setChatAtivo(false); };
 
   const iniciarChat = () => {
     setChatAtivo(true);
-    setMensagens([
-      {
-        de: "suporte",
-        texto: "Olá! Como posso ajudá-lo hoje?",
-        hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-      }
-    ]);
+    setMensagens([{ de: "suporte", texto: "Olá! Sou o assistente virtual. Como posso ajudá-lo hoje?", hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) }]);
   };
 
   const enviarMensagem = () => {
     if (novaMensagem.trim() === "") return;
-
-    const mensagemUsuario = {
-      de: "usuário",
-      texto: novaMensagem,
-      hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-    };
-
-    setMensagens([...mensagens, mensagemUsuario]);
+    const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const novasMensagens = [...mensagens, { de: "usuario", texto: novaMensagem, hora: horaAtual }];
+    setMensagens(novasMensagens);
     setNovaMensagem("");
 
-    // Simular resposta automática
     setTimeout(() => {
-      const respostas = [
-        "Entendo sua questão. Deixe-me verificar isso para você.",
-        "Vou encaminhar sua solicitação para nossa equipe técnica.",
-        "Essa é uma boa pergunta. Deixe-me explicar o processo.",
-        "Vou verificar as informações e retorno em breve.",
-        "Obrigado pelo contato. Nossa equipe está analisando."
-      ];
-
-      const respostaAleatoria = respostas[Math.floor(Math.random() * respostas.length)];
-
-      const mensagemSuporte = {
-        de: "suporte",
-        texto: respostaAleatoria,
-        hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-      };
-
-      setMensagens(prev => [...prev, mensagemSuporte]);
+      const respostaSuporte = { de: "suporte", texto: "Obrigado pelo seu contato. Um de nossos atendentes irá verificar sua mensagem em breve.", hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) };
+      setMensagens(prev => [...prev, respostaSuporte]);
     }, 1000);
-  };
-
-  const resetarSuporte = () => {
-    setPerguntaAtual(0);
-    setRespostaSelecionada(null);
-    setChatAtivo(false);
-    setMensagens([]);
   };
 
   return (
     <DashboardLayout>
-
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="flex h-16 items-center justify-between px-6">
-          <div className="flex items-center space-x-2">
-            <Wrench className="h-8 w-8 text-primary" />
-            <h1 className="text-xl font-bold text-foreground">Suporte</h1>
+      <div className="min-h-screen bg-background text-foreground">
+        <header className="border-b border-border bg-card">
+          <div className="flex h-16 items-center justify-between px-6">
+            <div className="flex items-center space-x-3">
+              <HelpCircle className="h-7 w-7 text-primary" />
+              <h1 className="text-xl font-bold">Suporte</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Button variant="outline" size="icon" onClick={toggleTheme} className="h-9 w-9">
+                <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center space-x-4">
+        </header>
 
-          </div>
-        </div>
-      </header>
-
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 md:p-10">
-        <div className="max-w-6xl mx-auto">
-
-
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Sistema de Perguntas */}
-            <div className="space-y-6">
-              {!chatAtivo && (
-                <>
-                  {/* Navegação */}
-                  <div className="flex items-center justify-between">
-                    <button
-                      onClick={voltarPergunta}
-                      disabled={perguntaAtual === 0}
-                      className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <ArrowLeft className="h-4 w-4" />
-                      Anterior
-                    </button>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                      {perguntaAtual + 1} de {perguntasSuporte.length}
-                    </span>
-                    <button
-                      onClick={proximaPergunta}
-                      disabled={perguntaAtual === perguntasSuporte.length - 1}
-                      className="px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Próxima
-                    </button>
-                  </div>
-
-                  {/* Pergunta Atual */}
-                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
-                      <HelpCircle className="h-6 w-6 mr-3 text-blue-600" />
-                      {perguntasSuporte[perguntaAtual].pergunta}
-                    </h2>
-
-                    <div className="space-y-3">
-                      {perguntasSuporte[perguntaAtual].opcoes.map((opcao, index) => (
-                        <button
-                          key={index}
-                          onClick={() => handleOpcaoClick(opcao.acao)}
-                          className="w-full text-left p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                        >
-                          <div className="font-medium text-gray-900 dark:text-gray-100 mb-1">
-                            {opcao.texto}
-                          </div>
-                          <div className="text-sm text-gray-600 dark:text-gray-400">
-                            {opcao.descricao}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Resposta Automática */}
-                  {respostaSelecionada && (
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                        {respostasAutomaticas[respostaSelecionada].titulo}
-                      </h3>
-
-                      <div className="space-y-3 mb-6">
-                        {respostasAutomaticas[respostaSelecionada].solucoes.map((solucao, index) => (
-                          <div key={index} className="flex items-start gap-3">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                            <p className="text-sm text-gray-700 dark:text-gray-300">{solucao}</p>
-                          </div>
+        <main className="p-4 sm:p-6 md:p-10">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Lado Esquerdo: Navegação de Ajuda */}
+            <Card className="flex flex-col">
+              <CardHeader>
+                <CardTitle>Ajuda Rápida</CardTitle>
+                <CardDescription>Encontre soluções para os problemas mais comuns.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col space-y-4">
+                {!resposta ? (
+                  <>
+                    <div className="p-4 border rounded-lg bg-secondary/50">
+                      <h3 className="font-semibold mb-3">{perguntasSuporte[perguntaAtual].pergunta}</h3>
+                      <div className="space-y-2">
+                        {perguntasSuporte[perguntaAtual].opcoes.map((opcao) => (
+                          <button key={opcao.acao} onClick={() => handleOpcaoClick(opcao.acao)} className="w-full text-left p-3 border rounded-md hover:bg-accent transition-colors">
+                            <p className="font-medium">{opcao.texto}</p>
+                            <p className="text-sm text-muted-foreground">{opcao.descricao}</p>
+                          </button>
                         ))}
                       </div>
-
-                      {respostasAutomaticas[respostaSelecionada].contato && (
-                        <button
-                          onClick={iniciarChat}
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
-                        >
-                          <MessageSquare className="h-5 w-5 inline mr-2" />
-                          Falar com Suporte
-                        </button>
-                      )}
-
-                      <button
-                        onClick={() => setRespostaSelecionada(null)}
-                        className="w-full mt-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 py-2 px-4 rounded-lg font-medium transition-colors"
-                      >
-                        Voltar às Opções
-                      </button>
                     </div>
-                  )}
-                </>
-              )}
-
-              {/* Botão de Reset */}
-              {!chatAtivo && (
-                <button
-                  onClick={resetarSuporte}
-                  className="w-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 py-3 px-4 rounded-lg font-medium transition-colors"
-                >
-                  Começar Novamente
-                </button>
-              )}
-            </div>
-
-            {/* Chat de Suporte */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 h-[600px] flex flex-col">
-              {chatAtivo ? (
-                <>
-                  {/* Cabeçalho do chat */}
-                  <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-                      <MessageSquare className="h-5 w-5 mr-2 text-blue-600" />
-                      Chat com Suporte
-                    </h3>
-                    <button
-                      onClick={() => setChatAtivo(false)}
-                      className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                    >
-                      ✕
-                    </button>
+                    <div className="flex items-center justify-between text-sm">
+                      <Button variant="ghost" onClick={voltarPergunta} disabled={perguntaAtual === 0}><ArrowLeft className="h-4 w-4 mr-2" /> Anterior</Button>
+                      <span>{perguntaAtual + 1} de {perguntasSuporte.length}</span>
+                      <Button variant="ghost" onClick={proximaPergunta} disabled={perguntaAtual === perguntasSuporte.length - 1}>Próxima <ArrowLeft className="h-4 w-4 ml-2 rotate-180" /></Button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="p-4 border rounded-lg bg-secondary/50">
+                    <h3 className="font-semibold mb-3">{resposta.titulo}</h3>
+                    <ul className="space-y-2 list-disc list-inside text-sm text-muted-foreground">
+                      {resposta.solucoes.map((sol, i) => <li key={i}>{sol}</li>)}
+                    </ul>
+                    <div className="flex gap-2 mt-4">
+                      {resposta.contato && <Button onClick={iniciarChat}><MessageSquare className="h-4 w-4 mr-2" /> Falar com Suporte</Button>}
+                      <Button variant="outline" onClick={() => setResposta(null)}>Ver outras opções</Button>
+                    </div>
                   </div>
+                )}
+                <div className="pt-4 mt-auto border-t">
+                  <Button variant="secondary" className="w-full" onClick={resetarSuporte}>Começar Novamente</Button>
+                </div>
+              </CardContent>
+            </Card>
 
-                  {/* Área do chat */}
-                  <div className="flex-1 p-4 overflow-y-auto space-y-4">
-                    {mensagens.map((m, i) => (
-                      <div
-                        key={i}
-                        className={`flex ${m.de === "usuário" ? "justify-end" : "justify-start"}`}
-                      >
-                        <div
-                          className={`max-w-[70%] p-3 rounded-xl ${m.de === "usuário"
-                              ? "bg-blue-500 text-white rounded-br-none"
-                              : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-bl-none"
-                            }`}
-                        >
-                          <p className="text-sm">{m.texto}</p>
-                          <span className="text-xs text-gray-400 dark:text-gray-300 mt-1 block text-right">
-                            {m.hora}
-                          </span>
+            {/* Lado Direito: Chat de Suporte */}
+            <Card className="flex flex-col h-[70vh]">
+              <CardHeader className="flex-row items-center justify-between">
+                <div className="space-y-1">
+                    <CardTitle>Chat de Suporte</CardTitle>
+                    <CardDescription>Converse com nossa equipe em tempo real.</CardDescription>
+                </div>
+                {chatAtivo && <Button variant="destructive" size="sm" onClick={() => setChatAtivo(false)}>Encerrar</Button>}
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col p-0">
+                {chatAtivo ? (
+                  <>
+                    <div className="flex-1 p-4 overflow-y-auto space-y-4">
+                      {mensagens.map((m, i) => (
+                        <div key={i} className={`flex ${m.de === 'usuario' ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`max-w-[80%] p-3 rounded-lg ${m.de === 'usuario' ? 'bg-primary text-primary-foreground rounded-br-none' : 'bg-muted rounded-bl-none'}`}>
+                            <p className="text-sm">{m.texto}</p>
+                            <span className="text-xs text-muted-foreground/80 mt-1 block text-right">{m.hora}</span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                      <div ref={chatEndRef} />
+                    </div>
+                    <div className="p-4 border-t flex gap-2">
+                      <Input type="text" placeholder="Escreva sua mensagem..." value={novaMensagem} onChange={(e) => setNovaMensagem(e.target.value)} onKeyDown={(e) => e.key === "Enter" && enviarMensagem()} className="flex-1"/>
+                      <Button onClick={enviarMensagem}><Send className="h-4 w-4" /></Button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
+                    <MessageSquare className="h-16 w-16 text-muted-foreground/50 mb-4" />
+                    <h3 className="font-semibold">Bem-vindo ao nosso chat!</h3>
+                    <p className="text-muted-foreground text-sm mt-1">Use a ajuda rápida ou inicie uma conversa.</p>
+                    <Button onClick={iniciarChat} className="mt-4">Iniciar Chat</Button>
                   </div>
-
-                  {/* Input de nova mensagem */}
-                  <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex gap-3">
-                    <input
-                      type="text"
-                      placeholder="Escreva sua mensagem..."
-                      className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white dark:bg-gray-700 dark:text-gray-100"
-                      value={novaMensagem}
-                      onChange={(e) => setNovaMensagem(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && enviarMensagem()}
-                    />
-                    <button
-                      onClick={enviarMensagem}
-                      className="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-lg flex items-center justify-center transition-colors"
-                    >
-                      <Send className="h-5 w-5" />
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="flex-1 flex items-center justify-center p-8">
-                  <div className="text-center">
-                    <MessageSquare className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                      Chat de Suporte
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-                      Use as opções ao lado para encontrar respostas rápidas ou inicie um chat para atendimento personalizado.
-                    </p>
-                    <button
-                      onClick={iniciarChat}
-                      className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors"
-                    >
-                      Iniciar Chat
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
-
-          {/* Informações de Contato */}
-          <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Outras Formas de Contato</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <Mail className="h-5 w-5 text-blue-600" />
-                <div>
-                  <div className="font-medium text-gray-900 dark:text-gray-100">Email</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">suporte@zelos.com</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <Phone className="h-5 w-5 text-green-600" />
-                <div>
-                  <div className="font-medium text-gray-900 dark:text-gray-100">Telefone</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">(11) 99999-9999</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <Clock className="h-5 w-5 text-orange-600" />
-                <div>
-                  <div className="font-medium text-gray-900 dark:text-gray-100">Horário</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Seg-Sex: 8h às 18h</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        </main>
       </div>
     </DashboardLayout>
   );

@@ -7,9 +7,9 @@ import { apiRequest } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { User, Mail, Calendar, Shield, Save, X, Moon, Sun } from "lucide-react";
+import { User, Mail, Calendar, Shield, Save, X, Moon, Sun, Edit } from "lucide-react";
 
 export default function Perfil() {
   const { user } = useAuth();
@@ -19,23 +19,19 @@ export default function Perfil() {
     nome: "",
     email: "",
     senha: "",
-    funcao: "",
-    status: "",
   });
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState("light");
 
+  // On component mount, check the system's current theme
   useEffect(() => {
-    // Aplicar tema ao carregar
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [theme]);
+    const isDark = document.documentElement.classList.contains("dark");
+    setTheme(isDark ? "dark" : "light");
+  }, []);
 
+  // Fetch user data
   useEffect(() => {
-    const load = async () => {
+    const loadUserData = async () => {
       if (!user?.id) return;
       try {
         const data = await apiRequest(`/api/usuarios/${user.id}`);
@@ -44,16 +40,14 @@ export default function Perfil() {
           nome: data.nome,
           email: data.email,
           senha: "",
-          funcao: data.funcao,
-          status: data.status,
         });
       } catch (e) {
-        console.error(e);
+        console.error("Failed to load user data:", e);
       } finally {
         setLoading(false);
       }
     };
-    load();
+    loadUserData();
   }, [user?.id]);
 
   const handleChange = (e) => {
@@ -62,232 +56,128 @@ export default function Perfil() {
 
   const handleUpdate = async () => {
     try {
-      const updateData = { ...form };
-      if (!updateData.senha) {
-        delete updateData.senha;
+      const updateData = { nome: form.nome, email: form.email };
+      if (form.senha) {
+        updateData.senha = form.senha;
       }
-      delete updateData.funcao; // Não permitir alterar função
-      delete updateData.status; // Não permitir alterar status
 
       await apiRequest(`/api/usuarios/${user.id}`, {
         method: "PUT",
         body: JSON.stringify(updateData),
       });
-      setEditando(false);
+      
       setUsuario({ ...usuario, nome: form.nome, email: form.email });
-      setForm({ ...form, senha: "" }); // Limpar senha após salvar
+      setForm({ ...form, senha: "" });
+      setEditando(false);
     } catch (error) {
-      console.error(error);
+      console.error("Failed to update profile:", error);
     }
   };
 
   const toggleTheme = () => {
-    setTheme(theme === "light" ? "dark" : "light");
-  };
-
-  const getFuncaoColor = (funcao) => {
-    switch (funcao) {
-      case "admin":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-      case "tecnico":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-      case "aluno":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
+    const newTheme = theme === "light" ? "dark" : "light";
+    setTheme(newTheme);
+    if (newTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
     }
   };
 
-  const getStatusColor = (status) => {
-    return status === "ativo"
-      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-  };
-
   const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("pt-BR", {
       day: "2-digit",
-      month: "2-digit",
+      month: "long",
       year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     });
   };
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-background dark:bg-gray-900">
-        {/* Header */}
-        <header className="border-b border-border bg-card dark:bg-gray-800 dark:border-gray-700">
+      <div className="min-h-screen bg-background text-foreground">
+        <header className="border-b border-border bg-card">
           <div className="flex h-16 items-center justify-between px-6">
-            <div className="flex items-center space-x-2">
-              <User className="h-8 w-8 text-primary dark:text-primary/80" />
-              <h1 className="text-xl font-bold text-foreground dark:text-gray-100">Meu Perfil</h1>
+            <div className="flex items-center space-x-3">
+              <User className="h-7 w-7 text-primary" />
+              <h1 className="text-xl font-bold">Meu Perfil</h1>
             </div>
             <div className="flex items-center space-x-4">
-              
+             
             </div>
           </div>
         </header>
 
-        <div className="p-6">
+        <main className="p-6 md:p-10">
           {loading ? (
             <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
           ) : (
-            <div className="max-w-4xl mx-auto space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Informações do Usuário */}
-                <Card className="dark:bg-gray-800 dark:border-gray-700">
-                  <CardContent className="p-6 space-y-4">
-                    <div className="flex items-center gap-3">
-                      <Mail className="h-4 w-4 text-muted-foreground dark:text-gray-400" />
-                      <div>
-                        <p className="text-sm text-muted-foreground dark:text-gray-400">Email</p>
-                        <p className="font-medium text-foreground dark:text-gray-100">{usuario?.email}</p>
-                      </div>
+            <div className="max-w-4xl mx-auto">
+              <Card>
+                <CardHeader>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-2xl">{usuario?.nome}</CardTitle>
+                      <CardDescription>{usuario?.email}</CardDescription>
                     </div>
-
-                    <div className="flex items-center gap-3">
-                      <Shield className="h-4 w-4 text-muted-foreground dark:text-gray-400" />
-                      <div>
-                        <p className="text-sm text-muted-foreground dark:text-gray-400">Função</p>
-                        <Badge className={getFuncaoColor(usuario?.funcao)}>{usuario?.funcao}</Badge>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <Shield className="h-4 w-4 text-muted-foreground dark:text-gray-400" />
-                      <div>
-                        <p className="text-sm text-muted-foreground dark:text-gray-400">Status</p>
-                        <Badge className={getStatusColor(usuario?.status)}>{usuario?.status}</Badge>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <Calendar className="h-4 w-4 text-muted-foreground dark:text-gray-400" />
-                      <div>
-                        <p className="text-sm text-muted-foreground dark:text-gray-400">Membro desde</p>
-                        <p className="font-medium text-foreground dark:text-gray-100">
-                          {formatDate(usuario?.criado_em)}
-                        </p>
-                      </div>
-                    </div>
-
-                    {usuario?.atualizado_em && (
-                      <div className="flex items-center gap-3">
-                        <Calendar className="h-4 w-4 text-muted-foreground dark:text-gray-400" />
-                        <div>
-                          <p className="text-sm text-muted-foreground dark:text-gray-400">Última atualização</p>
-                          <p className="font-medium text-foreground dark:text-gray-100">
-                            {formatDate(usuario?.atualizado_em)}
-                          </p>
-                        </div>
-                      </div>
+                    {!editando && (
+                      <Button onClick={() => setEditando(true)}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Editar Perfil
+                      </Button>
                     )}
-                  </CardContent>
-                </Card>
-
-                {/* Formulário de Edição */}
-                <Card className="dark:bg-gray-800 dark:border-gray-700">
-                  <CardContent className="p-6">
-                    {!editando ? (
-                      <div className="space-y-4">
-                        <div>
-                          <Label className="text-sm text-muted-foreground dark:text-gray-400">Nome</Label>
-                          <p className="font-medium text-foreground dark:text-gray-100">{usuario?.nome}</p>
+                  </div>
+                </CardHeader>
+                <CardContent className="border-t border-border pt-6">
+                  {!editando ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
+                      <div className="flex items-center gap-3"><Shield className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">Função:</span><Badge variant="outline">{usuario?.funcao}</Badge></div>
+                      <div className="flex items-center gap-3"><Shield className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">Status:</span><Badge variant={usuario?.status === "ativo" ? "default" : "destructive"}>{usuario?.status}</Badge></div>
+                      <div className="flex items-center gap-3"><Calendar className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">Membro desde:</span><span className="font-medium">{formatDate(usuario?.criado_em)}</span></div>
+                      <div className="flex items-center gap-3"><Calendar className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">Última atualização:</span><span className="font-medium">{formatDate(usuario?.atualizado_em)}</span></div>
+                    </div>
+                  ) : (
+                    <form onSubmit={(e) => { e.preventDefault(); handleUpdate(); }} className="space-y-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="nome">Nome</Label>
+                          <Input id="nome" name="nome" value={form.nome} onChange={handleChange} required />
                         </div>
-
-                        <div>
-                          <Label className="text-sm text-muted-foreground dark:text-gray-400">Senha</Label>
-                          <p className="font-medium text-foreground dark:text-gray-100">••••••••</p>
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email</Label>
+                          <Input id="email" name="email" type="email" value={form.email} onChange={handleChange} required />
                         </div>
-
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="senha">Nova Senha</Label>
+                        <Input id="senha" name="senha" type="password" value={form.senha} onChange={handleChange} placeholder="Deixe em branco para manter a atual" />
+                      </div>
+                      <div className="flex justify-end gap-4">
                         <Button
-                          onClick={() => setEditando(true)}
-                          className="w-full bg-primary text-white hover:bg-primary/90 dark:bg-primary/80 dark:hover:bg-primary/70"
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setEditando(false);
+                            setForm({ nome: usuario.nome, email: usuario.email, senha: "" });
+                          }}
                         >
-                          Editar Perfil
+                          <X className="h-4 w-4 mr-2" />
+                          Cancelar
+                        </Button>
+                        <Button type="submit">
+                          <Save className="h-4 w-4 mr-2" />
+                          Salvar Alterações
                         </Button>
                       </div>
-                    ) : (
-                      <form onSubmit={(e) => { e.preventDefault(); handleUpdate(); }} className="space-y-4">
-                        <div>
-                          <Label htmlFor="nome" className="text-foreground dark:text-gray-100">Nome</Label>
-                          <Input
-                            id="nome"
-                            name="nome"
-                            value={form.nome}
-                            onChange={handleChange}
-                            className="mt-1 border-gray-300 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:focus:ring-primary/80"
-                            required
-                          />
-                        </div>
-
-                        <div>
-                          <Label htmlFor="email" className="text-foreground dark:text-gray-100">Email</Label>
-                          <Input
-                            id="email"
-                            name="email"
-                            type="email"
-                            value={form.email}
-                            onChange={handleChange}
-                            className="mt-1 border-gray-300 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:focus:ring-primary/80"
-                            required
-                          />
-                        </div>
-
-                        <div>
-                          <Label htmlFor="senha" className="text-foreground dark:text-gray-100">
-                            Nova Senha (deixe em branco para manter a atual)
-                          </Label>
-                          <Input
-                            id="senha"
-                            name="senha"
-                            type="password"
-                            value={form.senha}
-                            onChange={handleChange}
-                            className="mt-1 border-gray-300 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:focus:ring-primary/80"
-                            placeholder="Nova senha (opcional)"
-                          />
-                        </div>
-
-                        <div className="flex gap-4">
-                          <Button
-                            type="submit"
-                            className="flex-1 bg-primary text-white hover:bg-primary/90 dark:bg-primary/80 dark:hover:bg-primary/70"
-                          >
-                            <Save className="h-4 w-4 mr-2" />
-                            Salvar
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                              setEditando(false);
-                              setForm({
-                                nome: usuario.nome,
-                                email: usuario.email,
-                                senha: "",
-                                funcao: usuario.funcao,
-                                status: usuario.status,
-                              });
-                            }}
-                            className="flex-1 border-gray-300 text-foreground dark:border-gray-600 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
-                          >
-                            <X className="h-4 w-4 mr-2" />
-                            Cancelar
-                          </Button>
-                        </div>
-                      </form>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
+                    </form>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           )}
-        </div>
+        </main>
       </div>
     </DashboardLayout>
   );

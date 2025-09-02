@@ -42,6 +42,7 @@ export default function ZelosDashboard({ onToggle }) {
           label: "Gerenciar Chamados",
         },
         { href: "/apontamentos", icon: Wrench, label: "Apontamentos" },
+      
       ];
     } else if (user?.funcao === "tecnico") {
       return [
