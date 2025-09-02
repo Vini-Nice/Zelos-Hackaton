@@ -29,7 +29,7 @@ export default function Header() {
         >
           {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
-        <img src="/logo_e.png" alt="" className="w-40" />
+        <img src="/logo_e.png" alt="" className="h-full w-40 object-contain scale-30" />
       </div>
 
       {/* Menu Mobile */}

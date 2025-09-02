@@ -15,7 +15,8 @@ import {
   UserPlus,
   UserCheck,
   UserX,
-  Wrench
+  Wrench,
+  Filter // Ícone importado
 } from "lucide-react";
 import {
   Dialog,
@@ -154,25 +155,58 @@ export default function Integrantes() {
 
   return (
     <DashboardLayout>
-      {/* Header */}
       <header className="border-b border-border bg-card">
             <div className="flex h-16 items-center justify-between px-6">
               <div className="flex items-center space-x-2">
                 <Wrench className="h-8 w-8 text-primary" />
                 <h1 className="text-xl font-bold text-foreground">Sistema de Manutenção</h1>
               </div>
-              <div className="flex items-center space-x-4">
-
-              </div>
+              <div className="flex items-center space-x-4"></div>
             </div>
-          </header>
+      </header>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 md:p-10">
         <div className="max-w-7xl mx-auto space-y-6">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            
-            
-          </div>
+
+          {/* NOVO: Seção de Filtros */}
+          <Card className="bg-white dark:bg-gray-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
+                <Filter className="h-5 w-5" />
+                Filtros de Busca
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Input
+                  placeholder="Buscar por nome ou email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="md:col-span-1"
+                />
+                <Select value={filterFuncao} onValueChange={setFilterFuncao}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filtrar por função" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todas as Funções</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="tecnico">Técnico</SelectItem>
+                    <SelectItem value="usuario_comum">Usuário Comum</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filtrar por status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos os Status</SelectItem>
+                    <SelectItem value="ativo">Ativo</SelectItem>
+                    <SelectItem value="inativo">Inativo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Formulário de Criação */}
           <Card className="bg-white dark:bg-gray-800">

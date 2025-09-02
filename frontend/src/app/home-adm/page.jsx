@@ -29,65 +29,10 @@ export default function MaintenanceDashboard() {
     chamadosPendentes: 0,
     chamadosResolvidos: 0,
     usuariosAtivos: 0,
+    chamadosPendentesAltaPrioridade: 0, // Novo estado
   });
   const [recentChamados, setRecentChamados] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const quickActions = [
-
-    {
-      title: "Chamados Pendente",
-      description: "12 ordens aguardando aprovação",
-      icon: Clock,
-      href: "/orders/pending",
-      color: "bg-accent hover:bg-accent/90",
-      urgent: true,
-      count: 12,
-    },
-    {
-      title: "Chamados",
-      description: "Gerencie os chamados",
-      icon: AlertTriangle,
-      href: "/chamados-usuarios",
-      color: "bg-destructive hover:bg-destructive/90",
-      urgent: true,
-      count: 3,
-    },
-    {
-      title: "Apontamentos",
-      description: "Visualizar apontamentos",
-      icon: BarChart3,
-      href: "/apontamentos",
-      color: "bg-secondary hover:bg-secondary/90",
-      urgent: false,
-    },
-  ];
-
-  const systemModules = [
-
-    {
-      title: "Usuários",
-      description: "Gerencie usuários",
-      icon: Users,
-      href: "/integrantes",
-      stats: "15 técnicos",
-    },
-
-    {
-      title: "Perfil",
-      description: "Configurar perfil",
-      icon: Settings,
-      href: "/perfil",
-      stats: "Sistema",
-    },
-  ];
-
-  const recentActivity = [
-    { id: 1, action: "Ordem #1234 concluída", time: "2 min atrás", status: "success" },
-    { id: 2, action: "Equipamento EQ-001 em manutenção", time: "15 min atrás", status: "warning" },
-    { id: 3, action: "Nova solicitação recebida", time: "1 hora atrás", status: "info" },
-    { id: 4, action: "Técnico João Silva disponível", time: "2 horas atrás", status: "success" },
-  ];
 
   useEffect(() => {
     fetchDashboardData();
@@ -102,14 +47,17 @@ export default function MaintenanceDashboard() {
 
       const chamadosArray = Array.isArray(chamados) ? chamados : [];
       const usuariosArray = Array.isArray(usuarios) ? usuarios : [];
+      
+      const chamadosPendentes = chamadosArray.filter((c) => (c.status || "").toLowerCase() === "pendente");
 
       setStats({
         totalChamados: chamadosArray.length,
-        chamadosPendentes: chamadosArray.filter((c) => (c.status || "").toLowerCase() === "pendente").length,
+        chamadosPendentes: chamadosPendentes.length,
         chamadosResolvidos: chamadosArray.filter((c) =>
           ["concluido", "concluído"].includes((c.status || "").toLowerCase())
         ).length,
         usuariosAtivos: usuariosArray.filter((u) => (u.status || "").toLowerCase() === "ativo").length,
+        chamadosPendentesAltaPrioridade: chamadosPendentes.filter(c => (c.prioridade || "").toLowerCase() === "alta").length,
       });
 
       setRecentChamados(chamadosArray.slice(0, 5));
@@ -119,6 +67,44 @@ export default function MaintenanceDashboard() {
       setLoading(false);
     }
   };
+  
+  // As arrays foram movidas para dentro do componente para acessar o estado 'stats'
+  const quickActions = [
+    {
+      title: "Chamados Pendente",
+      description: `${stats.chamadosPendentes} ordens aguardando ação`,
+      icon: Clock,
+      href: "/orders/pending",
+      color: "bg-accent hover:bg-accent/90",
+      urgent: true,
+      count: stats.chamadosPendentes,
+    },
+    {
+      title: "Apontamentos",
+      description: "Visualizar apontamentos",
+      icon: BarChart3,
+      href: "/apontamentos",
+      color: "bg-secondary hover:bg-secondary/90",
+      urgent: false,
+    },
+  ];
+
+  const systemModules = [
+    {
+      title: "Usuários",
+      description: "Gerencie usuários e técnicos",
+      icon: Users,
+      href: "/integrantes",
+      stats: `${stats.usuariosAtivos} ativos`,
+    },
+    {
+      title: "Perfil",
+      description: "Configurar seu perfil",
+      icon: Settings,
+      href: "/perfil",
+      stats: "Sistema",
+    },
+  ];
 
   const getStatusColor = (status) => {
     switch ((status || "").toLowerCase()) {
@@ -195,8 +181,6 @@ export default function MaintenanceDashboard() {
         <div className="p-6 space-y-6">
           {/* Status Overview */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-
-
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -208,8 +192,6 @@ export default function MaintenanceDashboard() {
                 </div>
               </CardContent>
             </Card>
-
-
 
             <Card>
               <CardContent className="p-4">
@@ -236,7 +218,7 @@ export default function MaintenanceDashboard() {
                         <div className={`p-2 rounded-lg ${action.color}`}>
                           <action.icon className="h-5 w-5 text-white" />
                         </div>
-                        {action.urgent && action.count && (
+                        {action.urgent && action.count > 0 && (
                           <Badge variant="destructive" className="text-xs">
                             {action.count}
                           </Badge>
@@ -279,15 +261,15 @@ export default function MaintenanceDashboard() {
 
             {/* card de chamados pendentes */}
             <div>
-              <h2 className="text-lg font-semibold text-foreground mb-4">Chamados Pendentes</h2>
+              <h2 className="text-lg font-semibold text-foreground mb-4">Chamados Pendentes Recentes</h2>
               <Card>
                 <CardContent className="p-4">
-                  {recentChamados.filter(c => c.status === "pendente").length === 0 ? (
+                  {recentChamados.filter(c => (c.status || "").toLowerCase() === "pendente").length === 0 ? (
                     <p className="text-sm text-muted-foreground">Nenhum chamado pendente.</p>
                   ) : (
                     <div className="space-y-4">
                       {recentChamados
-                        .filter((chamado) => chamado.status === "pendente")
+                        .filter((chamado) => (chamado.status || "").toLowerCase() === "pendente")
                         .map((chamado) => (
                           <div key={chamado.id} className="flex items-start space-x-3">
                             <div
@@ -298,11 +280,9 @@ export default function MaintenanceDashboard() {
                                 {chamado.titulo || `Chamado #${chamado.id}`}
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                Status: {getStatusLabel(chamado.status)} •
-                                Prioridade:{" "}
-                                <span className={`px-1 rounded ${getPrioridadeColor(chamado.prioridade)}`}>
-                                  {chamado.prioridade || "N/A"}
-                                </span>
+                                Status: {getStatusLabel(chamado.status)} 
+                                
+                               
                               </p>
                             </div>
                             <Link
@@ -318,9 +298,6 @@ export default function MaintenanceDashboard() {
                 </CardContent>
               </Card>
             </div>
-
-
-
           </div>
         </div>
       </div>

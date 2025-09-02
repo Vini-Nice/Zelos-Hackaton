@@ -1,3 +1,4 @@
+
 import { listarApontamentos, obterApontamentoPorId, criarApontamento, atualizarApontamento, excluirApontamento } from '../models/apontamento.js';
 
 const apontamentoController = {
@@ -25,6 +26,7 @@ const apontamentoController = {
   async criarApontamento(req, res) {
     try {
       const { chamado_id, tecnico_id, descricao, comeco, fim } = req.body;
+      // Correção: Apenas campos essenciais são obrigatórios na criação.
       if (!chamado_id || !tecnico_id || !comeco) {
         return res.status(400).json({ erro: 'Campos obrigatórios faltando: chamado_id, tecnico_id, comeco' });
       }
@@ -33,7 +35,7 @@ const apontamentoController = {
         tecnico_id, 
         descricao: descricao || null, 
         comeco, 
-        fim: fim || null 
+        fim: fim || null // Fim é opcional
       };
       const id = await criarApontamento(apontamentoData);
       res.status(201).json({ id, mensagem: 'Apontamento criado com sucesso' });
@@ -71,7 +73,5 @@ const apontamentoController = {
     }
   }
 };
-
-
 
 export default apontamentoController;

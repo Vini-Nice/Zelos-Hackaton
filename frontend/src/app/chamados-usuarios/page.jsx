@@ -6,42 +6,62 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { FileText, Search, Eye, Clock, CheckCircle, AlertTriangle, XCircle, User, Calendar, Wrench } from "lucide-react";
+import {
+  FileText, Search, Eye, Clock, CheckCircle, AlertTriangle, XCircle, User, Calendar
+} from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout/DashboardLayout";
 import { apiRequest } from "@/lib/auth";
 
 export default function ChamadosUsuarios() {
   const router = useRouter();
   const [chamados, setChamados] = useState([]);
+  const [userMap, setUserMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("todos");
   const [updatingId, setUpdatingId] = useState(null);
+  const [focusedChamadoId, setFocusedChamadoId] = useState(null);
 
   useEffect(() => {
-    fetchChamados();
+    fetchData();
   }, []);
 
-  const fetchChamados = async () => {
+  const fetchData = async () => {
     try {
-      const response = await apiRequest("/api/chamados");
-      const data = Array.isArray(response) ? response : response?.data;
-      setChamados(data || []);
+      const [chamadosResponse, usuariosResponse] = await Promise.all([
+        apiRequest("/api/chamados"),
+        apiRequest("/api/usuarios"),
+      ]);
+      const chamadosData = Array.isArray(chamadosResponse) ? chamadosResponse : [];
+      setChamados(chamadosData);
+
+      const usuariosData = Array.isArray(usuariosResponse) ? usuariosResponse : [];
+      const map = usuariosData.reduce((acc, user) => {
+        acc[user.id] = user;
+        return acc;
+      }, {});
+      setUserMap(map);
     } catch (error) {
-      console.error("Erro ao carregar chamados:", error);
+      console.error("Erro ao carregar dados:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const statusMap = {
-    pendente: { color: "bg-yellow-100 text-yellow-800", icon: <Clock className="h-4 w-4" />, label: "Pendente" },
-    "em andamento": { color: "bg-blue-100 text-blue-800", icon: <AlertTriangle className="h-4 w-4" />, label: "Em Andamento" },
-    concluido: { color: "bg-green-100 text-green-800", icon: <CheckCircle className="h-4 w-4" />, label: "Concluído" },
-    cancelado: { color: "bg-red-100 text-red-800", icon: <XCircle className="h-4 w-4" />, label: "Cancelado" },
-  };
+  const handleFocusChamado = (chamadoId) => {
+    const newFocusedId = focusedChamadoId === chamadoId ? null : chamadoId;
+    setFocusedChamadoId(newFocusedId);
 
+    if (newFocusedId) {
+      setTimeout(() => {
+        const element = document.getElementById(`chamado-${newFocusedId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 0);
+    }
+  };
+  
   const handleStatusChange = async (chamadoId, newStatus) => {
     try {
       setUpdatingId(chamadoId);
@@ -61,27 +81,30 @@ export default function ChamadosUsuarios() {
 
   const filteredChamados = useMemo(() => {
     return chamados.filter(chamado => {
+      const solicitante = userMap[chamado.usuario_id];
       const matchesSearch =
         chamado.titulo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        chamado.descricao?.toLowerCase().includes(searchTerm.toLowerCase());
+        chamado.descricao?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        solicitante?.nome?.toLowerCase().includes(searchTerm.toLowerCase());
+      
       const matchesStatus = filterStatus === "todos" || chamado.status === filterStatus;
       return matchesSearch && matchesStatus;
     });
-  }, [chamados, searchTerm, filterStatus]);
+  }, [chamados, searchTerm, filterStatus, userMap]);
 
   const stats = useMemo(() => ({
     total: chamados.length,
     pendentes: chamados.filter(c => c.status === "pendente").length,
     emAndamento: chamados.filter(c => c.status === "em andamento").length,
-    concluidos: chamados.filter(c => c.status === "concluido").length,
+    concluidos: chamados.filter(c => c.status === "concluido" || c.status === "concluído").length,
     cancelados: chamados.filter(c => c.status === "cancelado").length,
   }), [chamados]);
 
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="min-h-screen bg-gray-50 p-6 md:p-10 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="min-h-screen p-6 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
         </div>
       </DashboardLayout>
     );
@@ -89,171 +112,99 @@ export default function ChamadosUsuarios() {
 
   return (
     <DashboardLayout>
-      {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="flex h-16 items-center justify-between px-6">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
             <FileText className="h-8 w-8 text-primary" />
             <h1 className="text-xl font-bold text-foreground">Gerenciar Chamados</h1>
           </div>
-          <div className="flex items-center space-x-4">
-
-          </div>
         </div>
       </header>
-      <div className="min-h-screen bg-gray-50 p-6 md:p-10">
-        <div className="max-w-7xl mx-auto space-y-6">
-
-
-
-
-
+      <div className="p-6 md:p-10 space-y-6">
           {/* Estatísticas */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            {[
-              { title: "Total", value: stats.total, icon: <FileText className="h-8 w-8 text-blue-600" /> },
-              { title: "Pendentes", value: stats.pendentes, icon: <Clock className="h-8 w-8 text-yellow-600" /> },
-              { title: "Em Andamento", value: stats.emAndamento, icon: <AlertTriangle className="h-8 w-8 text-blue-600" /> },
-              { title: "Concluídos", value: stats.concluidos, icon: <CheckCircle className="h-8 w-8 text-green-600" /> },
-              { title: "Cancelados", value: stats.cancelados, icon: <XCircle className="h-8 w-8 text-red-600" /> },
-            ].map((stat, idx) => (
-              <Card key={idx}>
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">{stat.title}</p>
-                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                  </div>
-                  {stat.icon}
-                </CardContent>
-              </Card>
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Total</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold">{stats.total}</p></CardContent></Card>
+              <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Pendentes</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold">{stats.pendentes}</p></CardContent></Card>
+              <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Em Andamento</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold">{stats.emAndamento}</p></CardContent></Card>
+              <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Concluídos</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold">{stats.concluidos}</p></CardContent></Card>
+              <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Cancelados</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold">{stats.cancelados}</p></CardContent></Card>
           </div>
 
-          {/* Filtros e Busca */}
           <Card>
-            <CardContent className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Buscar chamados..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+            <CardContent className="p-4 flex flex-col md:flex-row gap-4">
+              <div className="relative flex-grow">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Buscar por título, descrição ou solicitante..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
               </div>
-
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filtrar por status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos os status</SelectItem>
-                  <SelectItem value="pendente">Pendentes</SelectItem>
-                  <SelectItem value="em andamento">Em Andamento</SelectItem>
-                  <SelectItem value="concluido">Concluídos</SelectItem>
-                  <SelectItem value="cancelado">Cancelados</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <div className="flex items-center justify-center bg-gray-100 rounded-lg px-4">
-                <span className="text-sm text-gray-600">
-                  {filteredChamados.length} chamado{filteredChamados.length !== 1 ? "s" : ""}
-                </span>
+              <div className="flex gap-4">
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="w-full md:w-[180px]"><SelectValue placeholder="Status" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    <SelectItem value="pendente">Pendentes</SelectItem>
+                    <SelectItem value="em andamento">Em Andamento</SelectItem>
+                    <SelectItem value="concluido">Concluídos</SelectItem>
+                    <SelectItem value="cancelado">Cancelados</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="hidden md:flex items-center justify-center bg-muted text-muted-foreground rounded-lg px-4 text-sm font-medium">
+                  {filteredChamados.length} encontrados
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Lista de Chamados */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Chamados do Sistema
-              </CardTitle>
-              <CardDescription>
-                Lista completa de todos os chamados registrados
-              </CardDescription>
+              <CardTitle>Chamados do Sistema</CardTitle>
+              <CardDescription>Lista de todos os chamados registrados. Clique no olho para focar.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+                <table className="w-full text-left">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th scope="col" className="py-3 px-4 font-semibold text-gray-900">Chamado</th>
-                      <th scope="col" className="py-3 px-4 font-semibold text-gray-900">Solicitante</th>
-                      <th scope="col" className="py-3 px-4 font-semibold text-gray-900">Status</th>
-                      <th scope="col" className="py-3 px-4 font-semibold text-gray-900">Data</th>
-                      <th scope="col" className="py-3 px-4 font-semibold text-gray-900">Técnico</th>
-                      <th scope="col" className="py-3 px-4 font-semibold text-gray-900">Ações</th>
+                    <tr className="border-b">
+                      <th className="py-3 px-4 font-semibold text-sm">Chamado</th>
+                      <th className="py-3 px-4 font-semibold text-sm">Solicitante</th>
+                      <th className="py-3 px-4 font-semibold text-sm">Data</th>
+                      <th className="py-3 px-4 font-semibold text-sm">Status</th>
+                      <th className="py-3 px-4 font-semibold text-sm text-right">Ações</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredChamados.length > 0 ? (
-                      filteredChamados.map((chamado, index) => (
-                        <tr
-                          key={chamado.id}
-                          className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                            }`}
-                        >
-                          <td className="py-3 px-4">
-                            <div>
-                              <p className="font-medium text-gray-900">{chamado.titulo}</p>
-                              <p className="text-sm text-gray-500 truncate max-w-xs">
-                                {chamado.descricao}
-                              </p>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-2">
-                              <User className="h-4 w-4 text-gray-400" />
-                              <span className="text-gray-700">Usuário #{chamado.usuario_id}</span>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <Select
-                              value={chamado.status}
-                              onValueChange={(value) => handleStatusChange(chamado.id, value)}
-                              disabled={updatingId === chamado.id}
-                            >
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Object.entries(statusMap).map(([key, { label }]) => (
-                                  <SelectItem key={key} value={key}>{label}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-2">
-                              <Calendar className="h-4 w-4 text-gray-400" />
-                              <span className="text-gray-700">
-                                {new Date(chamado.criado_em).toLocaleDateString("pt-BR")}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 text-gray-700">
-                            {chamado.tecnico_id ? `Técnico #${chamado.tecnico_id}` : "Não atribuído"}
-                          </td>
-                          <td className="py-3 px-4">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => router.push(`/chamado/${chamado.id}`)}
-                              className="h-8 w-8 p-0"
-                              aria-label="Visualizar chamado"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))
+                      filteredChamados.map((chamado) => {
+                        const isFocused = focusedChamadoId === chamado.id;
+                        return (
+                          <tr key={chamado.id} id={`chamado-${chamado.id}`} className={`border-b transition-colors ${isFocused ? 'bg-primary/10 ring-2 ring-primary' : 'hover:bg-muted/50'}`}>
+                            <td className="py-3 px-4">
+                              <p className="font-medium text-sm">{chamado.titulo}</p>
+                              <p className="text-xs text-muted-foreground truncate max-w-xs">{chamado.descricao}</p>
+                            </td>
+                            <td className="py-3 px-4 text-sm">{userMap[chamado.usuario_id]?.nome || 'N/A'}</td>
+                            <td className="py-3 px-4 text-sm">{new Date(chamado.criado_em).toLocaleDateString("pt-BR")}</td>
+                            <td className="py-3 px-4">
+                              <Select value={chamado.status} onValueChange={(value) => handleStatusChange(chamado.id, value)} disabled={updatingId === chamado.id}>
+                                <SelectTrigger className="w-[150px] h-9 text-xs"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pendente">Pendente</SelectItem>
+                                  <SelectItem value="em andamento">Em Andamento</SelectItem>
+                                  <SelectItem value="concluido">Concluído</SelectItem>
+                                  <SelectItem value="cancelado">Cancelado</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <Button variant="ghost" size="icon" onClick={() => handleFocusChamado(chamado.id)} aria-label="Focar no chamado">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })
                     ) : (
                       <tr>
-                        <td colSpan="6" className="py-8 text-center text-gray-500">
-                          Nenhum chamado encontrado
-                        </td>
+                        <td colSpan="5" className="py-8 text-center text-muted-foreground">Nenhum chamado encontrado.</td>
                       </tr>
                     )}
                   </tbody>
@@ -261,7 +212,6 @@ export default function ChamadosUsuarios() {
               </div>
             </CardContent>
           </Card>
-        </div>
       </div>
     </DashboardLayout>
   );

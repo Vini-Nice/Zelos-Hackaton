@@ -15,14 +15,14 @@ import {
   FileText,
   ChevronLeft,
   ChevronRight,
-  Wrench,
+  Wrench, Plus
 } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider/AuthProvider";
 
 export default function ZelosDashboard({ onToggle }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   const isActive = (path) => pathname === path;
 
@@ -36,18 +36,26 @@ export default function ZelosDashboard({ onToggle }) {
       return [
         { href: "/home-adm", icon: Home, label: "Home" },
         { href: "/integrantes", icon: Users, label: "Gerenciar Usuários" },
-        { href: "/chamados-usuarios", icon: FileText, label: "Gerenciar Chamados" },
+        {
+          href: "/chamados-usuarios",
+          icon: FileText,
+          label: "Gerenciar Chamados",
+        },
         { href: "/apontamentos", icon: Wrench, label: "Apontamentos" },
       ];
     } else if (user?.funcao === "tecnico") {
       return [
         { href: "/home-manutencao", icon: Wrench, label: "Home" },
-        { href: "/vizualizar-chamados", icon: FileText, label: "Visualizar Chamados" },
+        {
+          href: "/vizualizar-chamados",
+          icon: FileText,
+          label: "Visualizar Chamados",
+        },
       ];
     } else if (user?.funcao === "usuario_comum") {
       return [
         { href: "/", icon: Home, label: "Home" },
-        { href: "/abrir-chamado", icon: FileText, label: "Abrir Chamado" },
+        { href: "/abrir-chamado", icon: Plus, label: "Abrir Chamado" },
         { href: "/meus-chamados", icon: FileText, label: "Meus Chamados" },
       ];
     }
@@ -57,7 +65,7 @@ export default function ZelosDashboard({ onToggle }) {
   const commonRoutes = [
     { href: "/perfil", icon: User, label: "Perfil" },
     { href: "/ajuda", icon: HelpCircle, label: "Ajuda" },
-    { href: "/suporte", icon: MessageSquare, label: "Suporte" }
+    { href: "/suporte", icon: MessageSquare, label: "Suporte" },
   ];
 
   const allRoutes = [...getRoutesByUserType(), ...commonRoutes];
@@ -94,15 +102,19 @@ export default function ZelosDashboard({ onToggle }) {
           <Link href={href} key={href} passHref>
             <Button
               variant={isActive(href) ? "default" : "ghost"}
-              className={`w-full justify-start ${
+              className={`${
+                isCollapsed
+                  ? "w-10 h-10 justify-center mx-auto rounded-lg" // Ícones centralizados
+                  : "w-full justify-start px-4" // Expandido ocupa toda largura
+              } ${
                 isActive(href)
                   ? "text-white bg-blue-600 dark:bg-blue-500"
                   : "text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
-              } ${isCollapsed ? "px-2" : "px-4"}`}
+              }`}
               title={isCollapsed ? label : undefined}
             >
-              <Icon className={`h-4 w-4 ${isCollapsed ? "mr-0" : "mr-3"}`} />
-              {!isCollapsed && label}
+              <Icon className="h-4 w-4" />
+              {!isCollapsed && <span className="ml-3">{label}</span>}
             </Button>
           </Link>
         ))}
