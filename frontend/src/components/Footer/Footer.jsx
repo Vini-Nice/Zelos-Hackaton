@@ -3,7 +3,7 @@ import { Facebook, Twitter, Github, Globe } from "lucide-react";
 export default function Footer() {
   return (
     <div className=" px-2 ">
-      <footer className="bg-white border border-gray-200 rounded-lg  px-6 py-6">
+      <footer className="bg-white border dark:bg-gray-900 dark:border-gray-200  border-gray-200 rounded-lg  px-6 py-6">
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-500">
             © 2021 Themesberg, LLC. All rights reserved.
