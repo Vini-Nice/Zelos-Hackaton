@@ -10,7 +10,7 @@ import poolRoutes from './routes/poolRoutes.js';
 import chamadoRoutes from './routes/chamadoRoutes.js';
 import apontamentoRoutes from './routes/apontamentoRoutes.js';
 import poolTecnicoRoutes from './routes/poolTecnicoRoutes.js';
-
+import chatMessageRoutes from './routes/chatMessageRoutes.js';
 // 1. Carrega variáveis de ambiente PRIMEIRO
 dotenv.config();
 
@@ -53,7 +53,7 @@ app.use('/api/pools', poolRoutes);
 app.use('/api/chamados', chamadoRoutes);
 app.use('/api/apontamentos', apontamentoRoutes);
 app.use('/api/pool_tecnico', poolTecnicoRoutes);
-
+app.use('/api/chat', chatMessageRoutes);
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'online' });
 });

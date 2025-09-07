@@ -6,9 +6,10 @@ import { apiRequest } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Clock, CheckCircle, AlertCircle, Eye, Plus } from "lucide-react";
+import { FileText, Clock, CheckCircle, AlertCircle, Eye, Plus, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout/DashboardLayout";
+import ChatModal from "@/components/ChatModal/ChatModal";
 
 // Mapeamento de status para cores e ícones
 const statusConfig = {
@@ -22,7 +23,7 @@ const statusConfig = {
     color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
     Icon: AlertCircle,
   },
-  concluido: { // <-- CORRIGIDO: sem acento
+  concluido: {
     label: "Concluído",
     color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
     Icon: CheckCircle,
@@ -32,15 +33,16 @@ const statusConfig = {
 export default function MeusChamadosPage() {
   const { user } = useAuth();
   const [chamados, setChamados] = useState([]);
-  const [tipos, setTipos] = useState([]); // <-- NOVO: Para armazenar os tipos
+  const [tipos, setTipos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("todos");
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [selectedChat, setSelectedChat] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
       try {
-        // Busca chamados e tipos em paralelo para mais performance
         const [chamadosData, tiposData] = await Promise.all([
           apiRequest(`/api/chamados?usuario_id=${user.id}`),
           apiRequest(`/api/pools`)
@@ -53,11 +55,9 @@ export default function MeusChamadosPage() {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [user]);
 
-  // Função para obter o nome do tipo pelo ID
   const getTipoTitulo = (tipoId) => {
     const tipo = tipos.find(t => t.id === tipoId);
     if (!tipo) return 'Desconhecido';
@@ -73,7 +73,16 @@ export default function MeusChamadosPage() {
     total: chamados.length,
     pendentes: chamados.filter((c) => c.status === "pendente").length,
     emAndamento: chamados.filter((c) => c.status === "em andamento").length,
-    concluidos: chamados.filter((c) => c.status === "concluido").length, // <-- CORRIGIDO: sem acento
+    concluidos: chamados.filter((c) => c.status === "concluido").length,
+  };
+
+  const handleOpenChat = (chamado) => {
+    setSelectedChat({
+      chamadoId: chamado.id,
+      receiverId: chamado.tecnico_id,
+      receiverName: 'Técnico',
+    });
+    setIsChatOpen(true);
   };
 
   if (loading) {
@@ -105,7 +114,6 @@ export default function MeusChamadosPage() {
         </header>
 
         <main className="p-6 md:p-10 space-y-6">
-          {/* Estatísticas */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className="dark:bg-gray-800"><CardContent className="p-4"><p className="text-sm text-muted-foreground">Total</p><p className="text-2xl font-bold">{stats.total}</p></CardContent></Card>
             <Card className="dark:bg-gray-800"><CardContent className="p-4"><p className="text-sm text-muted-foreground">Pendentes</p><p className="text-2xl font-bold">{stats.pendentes}</p></CardContent></Card>
@@ -113,7 +121,6 @@ export default function MeusChamadosPage() {
             <Card className="dark:bg-gray-800"><CardContent className="p-4"><p className="text-sm text-muted-foreground">Concluídos</p><p className="text-2xl font-bold">{stats.concluidos}</p></CardContent></Card>
           </div>
 
-          {/* Filtros */}
           <Card className="dark:bg-gray-800">
             <CardContent className="p-4">
               <div className="flex flex-wrap gap-2">
@@ -125,7 +132,6 @@ export default function MeusChamadosPage() {
             </CardContent>
           </Card>
 
-          {/* Lista de Chamados */}
           <Card className="dark:bg-gray-800">
             <CardContent className="p-0">
               {filteredChamados.length > 0 ? (
@@ -158,9 +164,21 @@ export default function MeusChamadosPage() {
                             <td className="px-6 py-4 text-muted-foreground dark:text-gray-400">{new Date(chamado.criado_em).toLocaleDateString("pt-BR")}</td>
                             <td className="px-6 py-4 text-muted-foreground dark:text-gray-400">{getTipoTitulo(chamado.tipo_id)}</td>
                             <td className="px-6 py-4">
-                              <Button variant="ghost" size="icon" title="Ver detalhes" asChild>
-                                <Link href={`/chamado/${chamado.id}`}><Eye className="h-4 w-4" /></Link>
-                              </Button>
+                              <div className="flex items-center gap-2">
+                                <Button variant="ghost" size="icon" title="Ver detalhes" asChild>
+                                  <Link href={`/chamado/${chamado.id}`}><Eye className="h-4 w-4" /></Link>
+                                </Button>
+                                {chamado.tecnico_id && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    title="Conversar com o técnico"
+                                    onClick={() => handleOpenChat(chamado)}
+                                  >
+                                    <MessageSquare className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         );
@@ -184,6 +202,17 @@ export default function MeusChamadosPage() {
           </Card>
         </main>
       </div>
+
+      {isChatOpen && selectedChat && (
+        <ChatModal
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+          chamadoId={selectedChat.chamadoId}
+          senderId={user.id}
+          receiverId={selectedChat.receiverId}
+          receiverName={selectedChat.receiverName}
+        />
+      )}
     </DashboardLayout>
   );
 }
