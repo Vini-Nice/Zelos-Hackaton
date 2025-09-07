@@ -13,6 +13,8 @@ import poolTecnicoRoutes from './routes/poolTecnicoRoutes.js';
 import chatMessageRoutes from './routes/chatMessageRoutes.js';
 // 1. Carrega variáveis de ambiente PRIMEIRO
 import supportChatRoutes from './routes/supportChatRoutes.js';
+import notificacaoRoutes from './routes/notificacaoRoutes.js';
+import relatoriosRoutes from './routes/relatoriosRoutes.js';
 dotenv.config();
 
 // 2. Configuração básica do Express
@@ -26,7 +28,7 @@ try {
     credentials: true
   }));
   app.use(express.json());
-  
+
   app.use(session({
     secret: 'sJYMmuCB2Z187XneUuaOVYTVUlxEOb2K94tFZy370HjOY7T7aiCKvwhNQpQBYL9e',
     resave: false,
@@ -59,6 +61,8 @@ app.use('/api/support', supportChatRoutes);
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'online' });
 });
+app.use('/api/notificacoes', notificacaoRoutes);
+app.use('/api/relatorios', relatoriosRoutes);
 
 // 6. Tratamento de erros robusto
 process.on('unhandledRejection', (reason, promise) => {

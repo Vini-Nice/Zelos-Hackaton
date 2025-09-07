@@ -1,4 +1,5 @@
 import { getMessagesByChamadoId, createMessage } from '../models/chatMessage.js';
+import notificationService from '../services/notificationService.js';
 
 const chatMessageController = {
   async getMessages(req, res) {
@@ -19,6 +20,8 @@ const chatMessageController = {
       }
       const messageData = { chamado_id, sender_id, receiver_id, message };
       const id = await createMessage(messageData);
+      // Dispara a notificação de nova mensagem
+      await notificationService.notificarNovaMensagem(messageData);
       res.status(201).json({ id, mensagem: 'Mensagem enviada com sucesso' });
     } catch (error) {
       res.status(500).json({ erro: 'Erro ao enviar mensagem' });

@@ -17,6 +17,7 @@ import {
   ChevronRight,
   Wrench,
   Plus,
+  BarChart3,
 } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider/AuthProvider";
 
@@ -43,6 +44,7 @@ export default function ZelosDashboard({ onToggle }) {
           label: "Gerenciar Chamados",
         },
         { href: "/apontamentos", icon: Wrench, label: "Apontamentos" },
+          { href: "/relatorios", icon: BarChart3, label: "Relatórios" }, 
       ];
     } else if (user?.funcao === "tecnico") {
       return [
@@ -98,25 +100,26 @@ export default function ZelosDashboard({ onToggle }) {
       </div>
 
       {/* Navegação */}
-      <nav className="p-2 space-y-2"> {/* Mudei p-4 para p-2 para ficar mais justo */}
+      <nav className="p-2 space-y-2">
+        {" "}
+        {/* Mudei p-4 para p-2 para ficar mais justo */}
         {allRoutes.map(({ href, icon: Icon, label }) => (
           // NOVO: Adicionado 'relative group' ao wrapper do link
           <div key={href} className="relative group flex items-center">
-            <Link href={href} passHref legacyBehavior>
-              <a
-                className={`flex items-center transition-colors duration-200 ${
-                  isCollapsed
-                    ? "w-10 h-10 justify-center mx-auto rounded-lg" // Ícones centralizados
-                    : "w-full justify-start px-4 py-2 rounded-md" // Expandido ocupa toda largura
-                } ${
-                  isActive(href)
-                    ? "text-white bg-blue-600 dark:bg-blue-500"
-                    : "text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
-                }`}
-              >
-                <Icon className="h-4 w-4" /> {/* Aumentei um pouco o ícone */}
-                {!isCollapsed && <span className="ml-3">{label}</span>}
-              </a>
+            <Link
+              href={href}
+              className={`flex items-center transition-colors duration-200 ${
+                isCollapsed
+                  ? "w-10 h-10 justify-center mx-auto rounded-lg" // Ícones centralizados
+                  : "w-full justify-start px-4 py-2 rounded-md" // Expandido ocupa toda largura
+              } ${
+                isActive(href)
+                  ? "text-white bg-blue-600 dark:bg-blue-500"
+                  : "text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+              }`}
+            >
+              <Icon className="h-4 w-4" /> {/* Aumentei um pouco o ícone */}
+              {!isCollapsed && <span className="ml-3">{label}</span>}
             </Link>
 
             {/* NOVO: Tooltip que aparece no hover quando colapsado */}
@@ -134,7 +137,6 @@ export default function ZelosDashboard({ onToggle }) {
             )}
           </div>
         ))}
-
         {/* Logout */}
         <div className="relative group flex items-center">
           <Button

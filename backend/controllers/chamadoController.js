@@ -1,10 +1,10 @@
 import { listarChamados, obterChamadoPorId, criarChamado, atualizarChamado, excluirChamado, listarChamadosPorTecnico } from '../models/chamado.js';
 import { listarApontamentos } from '../models/apontamento.js';
+import notificationService from '../services/notificationService.js';
 
 const chamadoController = {
 
-
-async atribuirTecnico(req, res) {
+  async atribuirTecnico(req, res) {
     try {
       const { id } = req.params;
       const { tecnico_id } = req.body;
@@ -13,13 +13,18 @@ async atribuirTecnico(req, res) {
         return res.status(400).json({ erro: 'ID do técnico é obrigatório.' });
       }
 
-      // Atualiza o chamado com o ID do técnico e muda o status para "em andamento"
       const chamadoData = {
         tecnico_id: tecnico_id,
         status: 'em andamento'
       };
 
       await atualizarChamado(id, chamadoData);
+
+      // --- Notificação Adicionada ---
+      // Notifica o usuário que o chamado foi iniciado
+      const chamado = await obterChamadoPorId(id);
+      await notificationService.notificarStatusChamado(chamado);
+      
       res.status(200).json({ mensagem: 'Técnico atribuído e chamado iniciado com sucesso.' });
     } catch (error) {
       console.error("Erro ao atribuir técnico:", error);
@@ -76,45 +81,48 @@ async atribuirTecnico(req, res) {
 
   async criarChamado(req, res) {
     try {
-      const { titulo, descricao, tipo_id, usuario_id, tecnico_id, status } = req.body;
+      const { titulo, descricao, tipo_id, usuario_id, patrimonio } = req.body;
       if (!titulo || !descricao || !tipo_id || !usuario_id) {
         return res.status(400).json({ erro: 'Campos obrigatórios faltando: titulo, descricao, tipo_id, usuario_id' });
       }
-      const chamadoData = { 
-        titulo, 
-        descricao, 
-        tipo_id, 
-        usuario_id, 
-        tecnico_id: tecnico_id || null, 
-        status: status || 'pendente' 
+      const chamadoData = {
+        titulo,
+        descricao,
+        tipo_id,
+        usuario_id,
+        patrimonio,
+        status: 'pendente'
       };
       const id = await criarChamado(chamadoData);
-      
-      // --- CORREÇÃO AQUI ---
-      // O código de status para "Criado com sucesso" é 201.
-      res.status(201).json({ id, mensagem: 'Chamado criado com sucesso' });
 
+      // Dispara a notificação de novo chamado
+      await notificationService.notificarNovoChamado({ id, ...chamadoData });
+
+      res.status(201).json({ id, mensagem: 'Chamado criado com sucesso' });
     } catch (error) {
-      console.error("Erro ao criar chamado:", error); // Log do erro no console do servidor
+      console.error("Erro ao criar chamado:", error);
       res.status(500).json({ erro: 'Erro ao criar chamado' });
     }
   },
 
   async atualizarChamado(req, res) {
     try {
-      const { titulo, descricao, tipo_id, usuario_id, tecnico_id, status } = req.body;
-      const chamadoData = {};
-      if (titulo) chamadoData.titulo = titulo;
-      if (descricao) chamadoData.descricao = descricao;
-      if (tipo_id) chamadoData.tipo_id = tipo_id;
-      if (usuario_id) chamadoData.usuario_id = usuario_id;
-      if (tecnico_id) chamadoData.tecnico_id = tecnico_id;
-      if (status) chamadoData.status = status;
+      const { status } = req.body;
+      const chamadoData = { ...req.body };
 
       if (Object.keys(chamadoData).length === 0) {
         return res.status(400).json({ erro: 'Nenhum dado fornecido para atualização' });
       }
+
       await atualizarChamado(req.params.id, chamadoData);
+
+      // --- CORREÇÃO DE LÓGICA ---
+      // Notifica o usuário ANTES de enviar a resposta.
+      if (status) {
+        const chamado = await obterChamadoPorId(req.params.id);
+        await notificationService.notificarStatusChamado(chamado);
+      }
+      
       res.status(200).json({ mensagem: 'Chamado atualizado com sucesso' });
     } catch (error) {
       res.status(500).json({ erro: 'Erro ao atualizar chamado' });

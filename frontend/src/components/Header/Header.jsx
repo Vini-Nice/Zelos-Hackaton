@@ -4,7 +4,7 @@ import { useState } from "react";
 import { LogOut, User, Menu, X } from "lucide-react";
 import UserAvatar from "@/components/UserAvatar/UserAvatar";
 import DarkModeToggle from "@/components/DarkModeToggle/DarkModeToggle";
-
+import NotificationSystem from "@/components/NotificationSystem/NotificationSystem"; 
 import { useAuth } from "@/components/AuthProvider/AuthProvider";
 import { useRouter } from "next/navigation";
 
@@ -68,7 +68,7 @@ export default function Header() {
       <div className="flex items-center gap-2 md:gap-4">
         {/* Toggle de modo noturno */}
         <DarkModeToggle />
-
+  <NotificationSystem />
         {/* Sistema de notificações */}
         {/* <NotificationSystem /> */}
 

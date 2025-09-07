@@ -4,11 +4,24 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider/AuthProvider";
 import { apiRequest } from "@/lib/auth";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { FileText, AlertCircle, CheckCircle, Wrench, Plus } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout/DashboardLayout";
@@ -22,6 +35,7 @@ export default function AbrirChamadoPage() {
     titulo: "",
     descricao: "",
     tipo_id: "",
+    patrimonio: "",
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -42,8 +56,8 @@ export default function AbrirChamadoPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.titulo || !formData.descricao || !formData.tipo_id) {
-        setError("Todos os campos são obrigatórios.");
-        return;
+      setError("Todos os campos são obrigatórios.");
+      return;
     }
     setLoading(true);
     setError("");
@@ -72,7 +86,7 @@ export default function AbrirChamadoPage() {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-  
+
   const handleSelectChange = (value) => {
     setFormData((prev) => ({ ...prev, tipo_id: value }));
   };
@@ -80,25 +94,24 @@ export default function AbrirChamadoPage() {
   return (
     <DashboardLayout>
       <header className="border-b border-border bg-card">
-          <div className="flex h-16 items-center justify-between px-6">
-            <div className="flex items-center space-x-2">
-              <Plus className="h-8 w-8 text-primary" />
-              <h1 className="text-xl font-bold text-foreground">Abrir Chamado</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-
-            </div>
+        <div className="flex h-16 items-center justify-between px-6">
+          <div className="flex items-center space-x-2">
+            <Plus className="h-8 w-8 text-primary" />
+            <h1 className="text-xl font-bold text-foreground">Abrir Chamado</h1>
           </div>
-        </header>
+          <div className="flex items-center space-x-4"></div>
+        </div>
+      </header>
       <div className="p-6 md:p-10">
-        
         <Card className="max-w-4xl mx-auto">
           <CardHeader>
             <div className="flex items-center gap-3">
               <FileText className="h-8 w-8 text-primary" />
               <div>
                 <CardTitle className="text-2xl">Abrir Novo Chamado</CardTitle>
-                <CardDescription>Preencha os campos abaixo para criar uma nova solicitação.</CardDescription>
+                <CardDescription>
+                  Preencha os campos abaixo para criar uma nova solicitação.
+                </CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -126,7 +139,19 @@ export default function AbrirChamadoPage() {
                   disabled={loading}
                 />
               </div>
-
+              <div className="space-y-2">
+                <Label htmlFor="patrimonio">
+                  Número de Patrimônio (Opcional)
+                </Label>
+                <Input
+                  id="patrimonio"
+                  name="patrimonio"
+                  value={formData.patrimonio}
+                  onChange={handleInputChange}
+                  placeholder="Ex: 123456"
+                  disabled={loading}
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="tipo_id">Tipo de Chamado *</Label>
                 <Select
@@ -136,11 +161,14 @@ export default function AbrirChamadoPage() {
                   required
                   disabled={loading}
                 >
-                  <SelectTrigger id="tipo_id"><SelectValue placeholder="Selecione o tipo de problema" /></SelectTrigger>
+                  <SelectTrigger id="tipo_id">
+                    <SelectValue placeholder="Selecione o tipo de problema" />
+                  </SelectTrigger>
                   <SelectContent>
                     {pools.map((pool) => (
                       <SelectItem key={pool.id} value={String(pool.id)}>
-                        {pool.titulo.charAt(0).toUpperCase() + pool.titulo.slice(1).replace('_', ' ')}
+                        {pool.titulo.charAt(0).toUpperCase() +
+                          pool.titulo.slice(1).replace("_", " ")}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -164,7 +192,12 @@ export default function AbrirChamadoPage() {
                 <Button type="submit" disabled={loading} className="flex-1">
                   {loading ? "Enviando..." : "Abrir Chamado"}
                 </Button>
-                <Button type="button" variant="outline" onClick={() => router.push("/")} disabled={loading}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.push("/")}
+                  disabled={loading}
+                >
                   Cancelar
                 </Button>
               </CardFooter>
