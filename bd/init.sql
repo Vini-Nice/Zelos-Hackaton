@@ -2,6 +2,7 @@
     
     use zelo;
     
+    
     -- Criação da tabela `usuarios`
     CREATE TABLE usuarios (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -30,19 +31,20 @@
 
     -- Criação da tabela `chamados`
     CREATE TABLE chamados (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        titulo VARCHAR(255) NOT NULL,
-        descricao TEXT NOT NULL,
-        tipo_id INT,
-        tecnico_id INT,
-        usuario_id INT,
-        status ENUM('pendente', 'em andamento', 'concluido', 'cancelado') DEFAULT 'pendente',
-        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (tipo_id) REFERENCES pool(id),
-        FOREIGN KEY (tecnico_id) REFERENCES usuarios(id),
-        FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-    );
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(255) NOT NULL,
+    descricao TEXT NOT NULL,
+    patrimonio VARCHAR(255), 
+    tipo_id INT,
+    tecnico_id INT,
+    usuario_id INT,
+    status ENUM('pendente', 'em andamento', 'concluido', 'cancelado') DEFAULT 'pendente',
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (tipo_id) REFERENCES pool(id),
+    FOREIGN KEY (tecnico_id) REFERENCES usuarios(id),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+);
 
     -- Criação da tabela `apontamentos`
     CREATE TABLE apontamentos (
@@ -105,6 +107,20 @@ CREATE TABLE support_messages (
     lida BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (conversation_id) REFERENCES support_conversations(id) ON DELETE CASCADE,
     FOREIGN KEY (sender_id) REFERENCES usuarios(id) ON DELETE CASCADE
+);
+
+-- notificacoes
+
+CREATE TABLE notificacoes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    tipo VARCHAR(50) NOT NULL,
+    titulo VARCHAR(255) NOT NULL,
+    mensagem TEXT NOT NULL,
+    dados_adicional JSON,
+    lida BOOLEAN DEFAULT FALSE,
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 
 
