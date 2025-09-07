@@ -2,6 +2,31 @@ import { listarChamados, obterChamadoPorId, criarChamado, atualizarChamado, excl
 import { listarApontamentos } from '../models/apontamento.js';
 
 const chamadoController = {
+
+
+async atribuirTecnico(req, res) {
+    try {
+      const { id } = req.params;
+      const { tecnico_id } = req.body;
+
+      if (!tecnico_id) {
+        return res.status(400).json({ erro: 'ID do técnico é obrigatório.' });
+      }
+
+      // Atualiza o chamado com o ID do técnico e muda o status para "em andamento"
+      const chamadoData = {
+        tecnico_id: tecnico_id,
+        status: 'em andamento'
+      };
+
+      await atualizarChamado(id, chamadoData);
+      res.status(200).json({ mensagem: 'Técnico atribuído e chamado iniciado com sucesso.' });
+    } catch (error) {
+      console.error("Erro ao atribuir técnico:", error);
+      res.status(500).json({ erro: 'Erro ao atribuir técnico ao chamado.' });
+    }
+  },
+
   async listarChamados(req, res) {
     try {
       const { tecnico_id, usuario_id, status } = req.query;

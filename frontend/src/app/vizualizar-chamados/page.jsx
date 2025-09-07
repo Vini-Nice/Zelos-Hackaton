@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  FileText, Search, Clock, CheckCircle, AlertTriangle, XCircle, User, Calendar, MessageSquare, Wrench, UserCheck
+  FileText, Search, Clock, CheckCircle, AlertTriangle, XCircle, User, Calendar, MessageSquare, Wrench, UserCheck, Hand // Certifique-se de importar o ícone Hand
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout/DashboardLayout";
 import { apiRequest } from "@/lib/auth";
@@ -112,6 +112,19 @@ export default function VizualizarChamados() {
       setError("Não foi possível finalizar o chamado.");
     }
   };
+  
+  const handleAtenderChamado = async (chamadoId) => {
+    try {
+        await apiRequest(`/api/chamados/${chamadoId}/atribuir`, {
+            method: 'PATCH',
+            body: JSON.stringify({ tecnico_id: user.id }),
+        });
+        fetchChamados(); 
+    } catch (error) {
+        console.error("Erro ao atender chamado:", error);
+        setError("Não foi possível atender o chamado.");
+    }
+  };
 
   const getUsuarioNome = (id) => usuarios.find(u => u.id === id)?.nome || `ID #${id}`;
   const getTipoTitulo = (id) => tipos.find(t => t.id === id)?.titulo || 'Desconhecido';
@@ -190,18 +203,34 @@ export default function VizualizarChamados() {
                     const config = statusConfig[chamado.status] || { label: chamado.status, Icon: FileText, badgeClass: "bg-gray-100 text-gray-800" };
                     return (
                       <Card key={chamado.id} className={`relative transition-all hover:shadow-lg cursor-pointer ${selectedChamado?.id === chamado.id ? 'ring-2 ring-primary' : 'ring-0'}`} onClick={() => setSelectedChamado(chamado)}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="absolute top-2 right-2 h-8 w-8"
-                          title="Conversar com o usuário"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenChat(chamado);
-                          }}
-                        >
-                          <MessageSquare className="h-4 w-4" />
-                        </Button>
+                        <div className="absolute top-2 right-2 flex gap-1">
+                          <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              title="Conversar com o usuário"
+                              onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenChat(chamado);
+                              }}
+                          >
+                              <MessageSquare className="h-4 w-4" />
+                          </Button>
+                          {chamado.status === 'pendente' && (
+                              <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-green-600"
+                                  title="Atender Chamado"
+                                  onClick={(e) => { 
+                                      e.stopPropagation(); 
+                                      handleAtenderChamado(chamado.id);
+                                  }}
+                              >
+                                  <Hand className="h-4 w-4" />
+                              </Button>
+                          )}
+                        </div>
                         <CardContent className="p-4 flex items-start justify-between gap-4">
                           <div className="flex-1">
                             <h3 className="font-semibold mb-1">{chamado.titulo}</h3>

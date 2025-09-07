@@ -12,6 +12,7 @@ import apontamentoRoutes from './routes/apontamentoRoutes.js';
 import poolTecnicoRoutes from './routes/poolTecnicoRoutes.js';
 import chatMessageRoutes from './routes/chatMessageRoutes.js';
 // 1. Carrega variáveis de ambiente PRIMEIRO
+import supportChatRoutes from './routes/supportChatRoutes.js';
 dotenv.config();
 
 // 2. Configuração básica do Express
@@ -54,6 +55,7 @@ app.use('/api/chamados', chamadoRoutes);
 app.use('/api/apontamentos', apontamentoRoutes);
 app.use('/api/pool_tecnico', poolTecnicoRoutes);
 app.use('/api/chat', chatMessageRoutes);
+app.use('/api/support', supportChatRoutes);
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'online' });
 });

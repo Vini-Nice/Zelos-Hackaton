@@ -1,199 +1,301 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Send, MessageSquare, ArrowLeft, Sun, Moon } from "lucide-react";
-// Importações de componentes de UI (ex: shadcn/ui)
-import DashboardLayout from "@/components/DashboardLayout/DashboardLayout";
+import { useAuth } from "@/components/AuthProvider/AuthProvider";
+import { apiRequest } from "@/lib/auth";
+import { Card, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Send, UserPlus, MessageSquare, ArrowLeft, Bot, HelpCircle } from "lucide-react";
+import DashboardLayout from "@/components/DashboardLayout/DashboardLayout";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-// --- DADOS MOCADOS ---
-// Perguntas e opções para a seção de Ajuda Rápida
-const perguntasSuporte = [
-    { id: 1, pergunta: "Preciso de ajuda com o sistema", opcoes: [{ texto: "Não consigo fazer login", acao: "login", descricao: "Problemas para acessar o sistema" }, { texto: "Esqueci minha senha", acao: "senha", descricao: "Recuperação de credenciais" }, { texto: "Problema com um chamado", acao: "chamado", descricao: "Dúvidas sobre chamados" }, { texto: "Encontrei um erro", acao: "erro", descricao: "Bugs ou problemas técnicos" }, { texto: "Outra questão", acao: "outro", descricao: "Falar diretamente com suporte" }] },
-    { id: 2, pergunta: "Como funcionam os chamados?", opcoes: [{ texto: "Passo a passo para abrir", acao: "tutorial", descricao: "Guia visual completo" }, { texto: "Tipos de chamado", acao: "tipos", descricao: "Categorias disponíveis" }, { texto: "Prioridades e SLAs", acao: "prioridades", descricao: "Como definir a urgência" }] },
-    { id: 3, pergunta: "Como acompanhar meus chamados?", opcoes: [{ texto: "Verificar o status", acao: "status", descricao: "Como acompanhar o progresso" }, { texto: "Adicionar comentários", acao: "comentarios", descricao: "Como interagir com técnicos" }, { texto: "Cancelar um chamado", acao: "cancelar", descricao: "Quando e como cancelar" }] },
+// --- DADOS PARA RESPOSTAS AUTOMÁTICAS ---
+const faqData = [
+    { question: "Como abro um chamado?", answer: "Para abrir um chamado, vá para o menu lateral, clique em 'Abrir Chamado', preencha os campos e clique em 'Enviar'." },
+    { question: "Onde acompanho meus chamados?", answer: "Você pode ver o status de todos os seus chamados na página 'Meus Chamados', com atualização em tempo real." },
+    { question: "Como redefinir minha senha?", answer: "Acesse a página 'Perfil' no menu para alterar suas credenciais de acesso." },
+    { question: "Qual o prazo para meu chamado ser atendido?", answer: "O tempo de resposta varia com a prioridade. Você será notificado quando o status mudar para 'Em Andamento'." }
 ];
 
-// Respostas pré-definidas para as opções da Ajuda Rápida
-const respostasAutomaticas = {
-    login: { titulo: "Problemas de Login", solucoes: ["Verifique se seu usuário e senha estão corretos.", "Confirme se a tecla Caps Lock não está ativada.", "Tente limpar o cache e os cookies do seu navegador.", "Se o problema persistir, entre em contato para verificarmos um possível bloqueio."], contato: true },
-    senha: { titulo: "Recuperação de Senha", solucoes: ["Na tela de login, clique em 'Esqueci minha senha'.", "Digite seu e-mail cadastrado e siga as instruções.", "Você receberá um link para redefinir sua senha.", "O link de recuperação é válido por 1 hora."], contato: false },
-    outro: { titulo: "Falar com Suporte", solucoes: ["Para questões não listadas, nossa equipe está pronta para ajudar no chat.", "Por favor, inicie o chat e descreva seu problema em detalhes."], contato: true },
-    // Adicione outras respostas automáticas aqui...
+// --- COMPONENTE PRINCIPAL ---
+export default function SuportePage() {
+    const { user } = useAuth();
+
+    if (!user) return <DashboardLayout><div className="flex h-screen items-center justify-center text-gray-500">Carregando...</div></DashboardLayout>;
+
+    return user.funcao === 'admin' ? <AdminChatInterface currentUser={user} /> : <UserChatInterface currentUser={user} />;
+}
+
+// --- INTERFACE ADMIN ---
+const AdminChatInterface = ({ currentUser }) => {
+    const [users, setUsers] = useState([]);
+    const [conversations, setConversations] = useState([]);
+    const [currentChat, setCurrentChat] = useState(null);
+    const [messages, setMessages] = useState([]);
+    const [newMessage, setNewMessage] = useState("");
+    const [view, setView] = useState('chats'); // Estado para controlar a visão: 'chats' ou 'new'
+
+    const fetchAllData = async () => {
+        try {
+            const [usersData, conversationsData] = await Promise.all([
+                apiRequest('/api/support/users'),
+                apiRequest(`/api/support/conversations/${currentUser.id}`)
+            ]);
+            setUsers(usersData.filter(u => u.id !== currentUser.id));
+            setConversations(conversationsData);
+        } catch (error) { console.error("Erro ao buscar dados do chat:", error); }
+    };
+
+    useEffect(() => { fetchAllData(); }, [currentUser.id]);
+
+    useEffect(() => {
+        if (!currentChat?.conversationId) return;
+        const fetchMessages = async () => {
+            const data = await apiRequest(`/api/support/messages/${currentChat.conversationId}`);
+            setMessages(data);
+        };
+        fetchMessages();
+        const interval = setInterval(fetchMessages, 3000);
+        return () => clearInterval(interval);
+    }, [currentChat]);
+
+    const handleSendMessage = async () => {
+        if (!newMessage.trim() || !currentChat) return;
+        await apiRequest('/api/support/messages', {
+            method: 'POST',
+            body: JSON.stringify({ sender_id: currentUser.id, receiver_id: currentChat.receiver.id, message: newMessage }),
+        });
+        setNewMessage("");
+        const data = await apiRequest(`/api/support/messages/${currentChat.conversationId}`);
+        setMessages(data);
+    };
+
+    const startNewChat = async (receiver) => {
+        const existingConvo = conversations.find(c => c.user1_id === receiver.id || c.user2_id === receiver.id);
+        if (existingConvo) {
+            selectConversation(existingConvo);
+            setView('chats');
+            return;
+        }
+
+        try {
+            await apiRequest('/api/support/messages', {
+                method: 'POST',
+                body: JSON.stringify({ sender_id: currentUser.id, receiver_id: receiver.id, message: `Olá, ${receiver.nome}! Sou do suporte.` }),
+            });
+            const conversationsData = await apiRequest(`/api/support/conversations/${currentUser.id}`);
+            setConversations(conversationsData);
+            const newConvo = conversationsData.find(c => c.user1_id === receiver.id || c.user2_id === receiver.id);
+            if(newConvo) selectConversation(newConvo);
+            setView('chats');
+        } catch (error) { console.error("Erro ao iniciar nova conversa:", error); }
+    };
+
+    const selectConversation = (convo) => {
+        const receiverId = convo.user1_id === currentUser.id ? convo.user2_id : convo.user1_id;
+        const receiver = users.find(u => u.id === receiverId) || { id: receiverId, nome: `Usuário ${receiverId}` };
+        setCurrentChat({ conversationId: convo.id, receiver });
+    };
+
+    return (
+        <DashboardLayout>
+            <div className="h-[calc(100vh-4rem)] p-4 flex gap-4">
+                {/* Painel Esquerdo */}
+                <div className="w-1/3 flex flex-col bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+                    <CardHeader className="flex flex-row items-center justify-between p-3 border-b">
+                        <h2 className="font-semibold text-lg">{view === 'chats' ? "Conversas" : "Iniciar Conversa"}</h2>
+                        <Button variant="ghost" size="icon" onClick={() => setView(view === 'chats' ? 'new' : 'chats')}>
+                            {view === 'chats' ? <UserPlus className="h-5 w-5"/> : <ArrowLeft className="h-5 w-5"/>}
+                        </Button>
+                    </CardHeader>
+                    <div className="flex-1 overflow-y-auto">
+                        {view === 'chats' ? (
+                            conversations.map(convo => {
+                                const receiverId = convo.user1_id === currentUser.id ? convo.user2_id : convo.user1_id;
+                                const receiver = users.find(u => u.id === receiverId);
+                                return (
+                                    <div key={convo.id} onClick={() => selectConversation(convo)} className="flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition rounded-lg">
+                                        <Avatar className="h-10 w-10">
+                                            <AvatarFallback>{receiver?.nome.charAt(0) || 'U'}</AvatarFallback>
+                                        </Avatar>
+                                        <p className="font-medium">{receiver?.nome || `Usuário ${receiverId}`}</p>
+                                    </div>
+                                )
+                            })
+                        ) : (
+                             users.map(user => (
+                                <div key={user.id} onClick={() => startNewChat(user)} className="flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition rounded-lg">
+                                    <Avatar className="h-10 w-10">
+                                        <AvatarFallback>{user.nome.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                       <p className="font-medium">{user.nome}</p>
+                                       <p className="text-sm text-gray-500 dark:text-gray-400">{user.funcao}</p>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+
+                {/* Painel Direito (Chat Ativo) */}
+                <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900 rounded-xl shadow-md overflow-hidden">
+                    {currentChat ? (
+                        <>
+                            <CardHeader className="flex flex-row items-center gap-3 p-3 border-b bg-white dark:bg-gray-800 shadow-sm">
+                                <Avatar className="h-10 w-10">
+                                    <AvatarFallback>{currentChat.receiver.nome.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <h3 className="font-semibold">{currentChat.receiver.nome}</h3>
+                            </CardHeader>
+                            <ChatWindow messages={messages} currentUserId={currentUser.id} />
+                            <div className="p-4 border-t flex gap-2 bg-white dark:bg-gray-800">
+                                <Textarea value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Digite sua mensagem..." rows={1} className="resize-none rounded-full bg-gray-100 dark:bg-gray-700 focus:ring-2 focus:ring-blue-400" onKeyDown={e => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }} />
+                                <Button onClick={handleSendMessage} size="icon" className="bg-blue-500 hover:bg-blue-600 text-white rounded-full flex-shrink-0">
+                                    <Send className="h-4 w-4"/>
+                                </Button>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="flex-1 flex flex-col items-center justify-center text-center text-gray-400 dark:text-gray-500">
+                            <MessageSquare className="h-12 w-12 mb-4" />
+                            <h3 className="text-lg font-semibold">Zelos Suporte</h3>
+                            <p>Selecione uma conversa para começar.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </DashboardLayout>
+    );
 };
 
-export default function Suporte() {
-  // --- ESTADOS DO COMPONENTE ---
-  const [perguntaAtual, setPerguntaAtual] = useState(0); // Índice da pergunta na Ajuda Rápida
-  const [resposta, setResposta] = useState(null); // Resposta automática selecionada
-  const [chatAtivo, setChatAtivo] = useState(false); // Controla a visibilidade do chat
-  const [mensagens, setMensagens] = useState([]); // Array com as mensagens do chat
-  const [novaMensagem, setNovaMensagem] = useState(""); // Valor do input de nova mensagem
-  const [theme, setTheme] = useState("light"); // Estado para o tema (light/dark)
-  const chatEndRef = useRef(null); // Referência para o final do contêiner de chat
+// --- INTERFACE USUÁRIO ---
+const UserChatInterface = ({ currentUser }) => {
+    const [chatState, setChatState] = useState('initial');
+    const [messages, setMessages] = useState([]);
+    const [newMessage, setNewMessage] = useState("");
+    const [admin, setAdmin] = useState(null);
+    const [conversationId, setConversationId] = useState(null);
 
-  // --- EFEITOS (useEffect) ---
-  // Efeito para rolar o chat para a última mensagem
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [mensagens]); // Roda sempre que o array de mensagens for atualizado
-  
-  // Efeito para inicializar o tema com base no que está no HTML
-  useEffect(() => {
-    const isDark = document.documentElement.classList.contains("dark");
-    setTheme(isDark ? "dark" : "light");
-  }, []); // Roda apenas uma vez, na montagem do componente
-  
-  // --- FUNÇÕES E MANIPULADORES DE EVENTOS ---
-  // Alterna o tema entre claro e escuro
-  const toggleTheme = () => {
-    document.documentElement.classList.toggle("dark");
-    setTheme(prevTheme => (prevTheme === "light" ? "dark" : "light"));
-  };
+    useEffect(() => {
+        const findAdminAndConversation = async () => {
+            try {
+                const users = await apiRequest('/api/support/users');
+                const firstAdmin = users.find(u => u.funcao === 'admin');
+                if (firstAdmin) {
+                    setAdmin(firstAdmin);
+                    const convos = await apiRequest(`/api/support/conversations/${currentUser.id}`);
+                    const existingConvo = convos.find(c => (c.user1_id === firstAdmin.id || c.user2_id === firstAdmin.id));
+                    if(existingConvo) {
+                        setConversationId(existingConvo.id);
+                        const msgs = await apiRequest(`/api/support/messages/${existingConvo.id}`);
+                        setMessages(msgs);
+                        if(msgs.length > 0) setChatState('live_chat');
+                    }
+                }
+            } catch(error) { console.error("Erro ao buscar admin:", error); }
+        };
+        findAdminAndConversation();
+    }, [currentUser.id]);
 
-  // Define qual resposta automática exibir com base na ação do botão
-  const handleOpcaoClick = (acao) => setResposta(respostasAutomaticas[acao] || respostasAutomaticas["outro"]);
-  
-  // Funções de navegação para a Ajuda Rápida
-  const voltarPergunta = () => { if (perguntaAtual > 0) { setPerguntaAtual(p => p - 1); setResposta(null); }};
-  const proximaPergunta = () => { if (perguntaAtual < perguntasSuporte.length - 1) { setPerguntaAtual(p => p + 1); setResposta(null); }};
-  const resetarSuporte = () => { setPerguntaAtual(0); setResposta(null); setChatAtivo(false); };
+    const handleQuestionClick = (faqItem) => {
+        const userMessage = { id: `faq-${Date.now()}`, sender_id: currentUser.id, message: faqItem.question, timestamp: new Date().toISOString() };
+        const botMessage = { id: `faq-ans-${Date.now()}`, sender_id: -1, message: faqItem.answer, timestamp: new Date().toISOString() };
+        setMessages([userMessage, botMessage]);
+        setChatState('answered');
+    };
 
-  // Inicia o chat e adiciona a primeira mensagem de boas-vindas
-  const iniciarChat = () => {
-    setChatAtivo(true);
-    setMensagens([{ de: "suporte", texto: "Olá! Sou o assistente virtual. Como posso ajudá-lo hoje?", hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) }]);
-  };
+    const handleSendMessage = async () => {
+        if (!newMessage.trim() || !admin) return;
+        
+        await apiRequest('/api/support/messages', {
+            method: 'POST',
+            body: JSON.stringify({ sender_id: currentUser.id, receiver_id: admin.id, message: newMessage }),
+        });
+        setNewMessage("");
 
-  // Envia uma nova mensagem para o chat
-  const enviarMensagem = () => {
-    if (novaMensagem.trim() === "") return; // Impede o envio de mensagens vazias
+        const convos = await apiRequest(`/api/support/conversations/${currentUser.id}`);
+        const existingConvo = convos.find(c => (c.user1_id === admin.id || c.user2_id === admin.id));
+        if (existingConvo) {
+            setConversationId(existingConvo.id);
+            const msgs = await apiRequest(`/api/support/messages/${existingConvo.id}`);
+            setMessages(msgs);
+        }
+    };
 
-    const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    
-    // Adiciona a mensagem do usuário ao estado
-    setMensagens(prev => [...prev, { de: "usuario", texto: novaMensagem, hora: horaAtual }]);
-    setNovaMensagem(""); // Limpa o campo de input
-
-    // Simula uma resposta do suporte após 1 segundo
-    setTimeout(() => {
-      const respostaSuporte = { de: "suporte", texto: "Obrigado pelo seu contato. Um de nossos atendentes irá verificar sua mensagem em breve.", hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) };
-      setMensagens(prev => [...prev, respostaSuporte]);
-    }, 1000);
-  };
-
-  // --- RENDERIZAÇÃO DO COMPONENTE (JSX) ---
-  return (
-    <DashboardLayout>
-      <div className="min-h-screen bg-background text-foreground">
-        <header className="border-b border-border bg-card">
-          <div className="flex h-16 items-center justify-between px-6">
-            <h1 className="text-xl font-bold">Suporte</h1>
-          
-          </div>
-        </header>
-
-        <main className="p-4 sm:p-6 md:p-10">
-          <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Card da Esquerda: Ajuda Rápida */}
-            <Card className="flex flex-col">
-              <CardHeader>
-                <CardTitle>Ajuda Rápida</CardTitle>
-                <CardDescription>Encontre soluções para os problemas mais comuns.</CardDescription>
-              </CardHeader>
-              <CardContent className="flex-1 flex flex-col space-y-4">
-                {!resposta ? (
-                  <>
-                    {/* Exibe as perguntas e opções */}
-                    <div className="p-4 border rounded-lg bg-secondary/50">
-                      <h3 className="font-semibold mb-3">{perguntasSuporte[perguntaAtual].pergunta}</h3>
-                      <div className="space-y-2">
-                        {perguntasSuporte[perguntaAtual].opcoes.map((opcao) => (
-                          <button key={opcao.acao} onClick={() => handleOpcaoClick(opcao.acao)} className="w-full text-left p-3 border rounded-md hover:bg-accent transition-colors">
-                            <p className="font-medium">{opcao.texto}</p>
-                            <p className="text-sm text-muted-foreground">{opcao.descricao}</p>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    {/* Navegação entre as perguntas */}
-                    <div className="flex items-center justify-between text-sm">
-                      <Button variant="ghost" onClick={voltarPergunta} disabled={perguntaAtual === 0}><ArrowLeft className="h-4 w-4 mr-2" /> Anterior</Button>
-                      <span>{perguntaAtual + 1} de {perguntasSuporte.length}</span>
-                      <Button variant="ghost" onClick={proximaPergunta} disabled={perguntaAtual === perguntasSuporte.length - 1}>Próxima <ArrowLeft className="h-4 w-4 ml-2 rotate-180" /></Button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    {/* Exibe a resposta automática selecionada */}
-                    <div className="p-4 border rounded-lg bg-secondary/50">
-                      <h3 className="font-semibold mb-3">{resposta.titulo}</h3>
-                      <ul className="space-y-2 list-disc list-inside text-sm text-muted-foreground">
-                        {resposta.solucoes.map((sol, i) => <li key={i}>{sol}</li>)}
-                      </ul>
-                      <div className="flex gap-2 mt-4">
-                        {resposta.contato && <Button onClick={iniciarChat}><MessageSquare className="h-4 w-4 mr-2" /> Falar com Suporte</Button>}
-                        <Button variant="outline" onClick={() => setResposta(null)}>Ver outras opções</Button>
-                      </div>
-                    </div>
-                  </>
-                )}
-                {/* Botão para reiniciar a ajuda */}
-                <div className="pt-4 mt-auto border-t">
-                  <Button variant="secondary" className="w-full" onClick={resetarSuporte}>Começar Novamente</Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Card da Direita: Chat de Suporte */}
-            <Card className="flex flex-col h-[70vh]">
-              <CardHeader className="flex-row items-center justify-between">
-                <div>
-                    <CardTitle>Chat de Suporte</CardTitle>
-                    <CardDescription>Converse com nossa equipe em tempo real.</CardDescription>
-                </div>
-                {chatAtivo && <Button variant="destructive" size="sm" onClick={() => setChatAtivo(false)}>Encerrar</Button>}
-              </CardHeader>
-              <CardContent className="flex-1 flex flex-col p-0">
-                {chatAtivo ? (
-                  <>
-                    {/* Área de exibição das mensagens */}
-                    <div className="flex-1 p-4 overflow-y-auto space-y-4">
-                      {mensagens.map((m, i) => (
-                        <div key={i} className={`flex ${m.de === 'usuario' ? 'justify-end' : 'justify-start'}`}>
-                          <div className={`max-w-[80%] p-3 rounded-lg ${m.de === 'usuario' ? 'bg-primary text-primary-foreground rounded-br-none' : 'bg-muted rounded-bl-none'}`}>
-                            <p className="text-sm">{m.texto}</p>
-                            <span className="text-xs text-muted-foreground/80 mt-1 block text-right">{m.hora}</span>
-                          </div>
+    return (
+        <DashboardLayout>
+            <div className="h-[calc(100vh-4rem)] p-4 flex justify-center items-center">
+                <div className="w-full max-w-4xl h-full flex gap-4">
+                    <div className="w-1/3 flex flex-col bg-white dark:bg-gray-800 rounded-xl shadow-md p-4">
+                        <h2 className="font-semibold text-lg mb-4 flex items-center gap-2"><HelpCircle className="h-5 w-5 text-blue-500"/> Ajuda Rápida</h2>
+                        <div className="space-y-2">
+                            {faqData.map(item => (
+                                <Button key={item.question} variant="outline" className="w-full justify-start h-auto py-3 text-left" onClick={() => handleQuestionClick(item)}>{item.question}</Button>
+                            ))}
+                            <Button className="w-full" onClick={() => setChatState('live_chat')}>Falar com um atendente</Button>
                         </div>
-                      ))}
-                      {/* Elemento invisível para o qual a tela rola */}
-                      <div ref={chatEndRef} />
                     </div>
-                    {/* Área de input da mensagem */}
-                    <div className="p-4 border-t flex gap-2">
-                      <Input type="text" placeholder="Escreva sua mensagem..." value={novaMensagem} onChange={(e) => setNovaMensagem(e.target.value)} onKeyDown={(e) => e.key === "Enter" && enviarMensagem()} className="flex-1"/>
-                      <Button onClick={enviarMensagem}><Send className="h-4 w-4" /></Button>
+
+                    <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900 rounded-xl shadow-md overflow-hidden">
+                       {(chatState === 'initial') && (
+                           <div className="flex-1 flex flex-col items-center justify-center text-center text-gray-400 dark:text-gray-500 p-4">
+                             <MessageSquare className="h-12 w-12 mb-4" />
+                             <h3 className="text-lg font-semibold">Bem-vindo ao Suporte</h3>
+                             <p>Selecione um tópico ao lado ou inicie uma conversa com nossa equipe.</p>
+                           </div>
+                       )}
+                       {(chatState === 'answered' || chatState === 'live_chat') && (
+                            <>
+                                <ChatWindow messages={messages} currentUserId={currentUser.id} />
+                                {chatState === 'answered' && (
+                                    <div className="p-4 text-center border-t bg-white dark:bg-gray-800">
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Esta resposta foi útil?</p>
+                                        <Button onClick={() => setChatState('live_chat')}>Não, preciso de ajuda</Button>
+                                    </div>
+                                )}
+                                {chatState === 'live_chat' && (
+                                    <div className="p-4 border-t flex gap-2 bg-white dark:bg-gray-800">
+                                        <Textarea value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Digite sua mensagem..." rows={1} className="resize-none rounded-full bg-gray-100 dark:bg-gray-700 focus:ring-2 focus:ring-blue-400" onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }} />
+                                        <Button onClick={handleSendMessage} disabled={!admin} size="icon" className="bg-blue-500 hover:bg-blue-600 text-white rounded-full flex-shrink-0">
+                                            <Send className="h-4 w-4"/>
+                                        </Button>
+                                    </div>
+                                )}
+                            </>
+                        )}
                     </div>
-                  </>
-                ) : (
-                  <>
-                    {/* Tela inicial do chat */}
-                    <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-                      <MessageSquare className="h-16 w-16 text-muted-foreground/50 mb-4" />
-                      <h3 className="font-semibold">Bem-vindo ao nosso chat!</h3>
-                      <p className="text-muted-foreground text-sm mt-1">Use a ajuda rápida ou inicie uma conversa.</p>
-                      <Button onClick={iniciarChat} className="mt-4">Iniciar Chat</Button>
+                </div>
+            </div>
+        </DashboardLayout>
+    );
+};
+
+// --- COMPONENTE REUTILIZÁVEL PARA MENSAGENS ---
+const ChatWindow = ({ messages, currentUserId }) => {
+    const messagesEndRef = useRef(null);
+    useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
+    return (
+        <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-gray-100/50 dark:bg-gray-900/50">
+            {messages.map(msg => (
+                <div key={msg.id} className={`flex items-end gap-2 ${msg.sender_id === currentUserId ? 'justify-end' : 'justify-start'}`}>
+                    {msg.sender_id !== currentUserId && (
+                        <Avatar className="h-8 w-8">
+                            <AvatarFallback>{msg.sender_id === -1 ? <Bot /> : 'S'}</AvatarFallback>
+                        </Avatar>
+                    )}
+                    <div className={`px-4 py-2 rounded-2xl max-w-[70%] text-sm
+                        ${msg.sender_id === currentUserId ? 'bg-blue-500 text-white rounded-br-none' : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-none shadow-sm'}`}>
+                        <p>{msg.message}</p>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 block text-right">
+                            {new Date(msg.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
                     </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </main>
-      </div>
-    </DashboardLayout>
-  );
-}
+                </div>
+            ))}
+            <div ref={messagesEndRef} />
+        </div>
+    );
+};

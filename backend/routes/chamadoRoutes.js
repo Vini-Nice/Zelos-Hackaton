@@ -9,5 +9,6 @@ router.post('/', chamadoController.criarChamado);
 router.put('/:id', chamadoController.atualizarChamado);
 router.delete('/:id', chamadoController.excluirChamado);
 router.get('/tecnico/:tecnico_id', chamadoController.listarChamadosPorTecnico);
+router.patch('/:id/atribuir', chamadoController.atribuirTecnico);
 
 export default router;
