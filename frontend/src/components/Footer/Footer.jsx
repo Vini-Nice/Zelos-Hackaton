@@ -6,7 +6,7 @@ export default function Footer() {
       <footer className="bg-white border dark:bg-gray-900 dark:border-gray-200  border-gray-200 rounded-lg  px-6 py-6">
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-500">
-            © 2021 Themesberg, LLC. All rights reserved.
+            © 2025 Zelos SENAI, LLC. All rights reserved.
           </p>
           <div className="flex space-x-6">
             <a href="#" className="text-gray-600 hover:text-gray-800">
